@@ -87,4 +87,4 @@ This server iteration builds upon the initial prototype in `p0`, focusing on exp
 ## Access and Usage
 
 - **Message Viewer Interface:** Accessible via a web browser for viewing messages in a user-friendly format.
-   - [View here](http://localhost:5175/)
+  - [View here](http://localhost:5175/)

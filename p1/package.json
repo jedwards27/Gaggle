@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "format": "prettier --write .",
-    "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
-    "lint": "eslint .",
+    "build": "node esbuild.config.cjs",
     "serve": "node dist/index.cjs",
-    "test": "jest",
-    "build": "node esbuild.config.cjs"
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
+    "test": "jest"
   },
   "files": [
     "dist"

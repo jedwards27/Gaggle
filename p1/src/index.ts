@@ -11,6 +11,12 @@ import { recentMessages, addMessage } from "./operations/recentMessages.js";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
+// Define schema for add_message tool
+const addMessageSchema = z.object({
+  senderId: z.string().nonempty("Sender ID is required"),
+  content: z.string().nonempty("Content is required"),
+});
+
 const server = new Server(
   {
     name: "p1-mcp-server",
@@ -29,27 +35,22 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "register_agent",
         description: "Register a new agent",
-        inputSchema: zodToJsonSchema(z.object({})), // Add specific input schema here
+        inputSchema: zodToJsonSchema(z.object({})),
       },
       {
         name: "list_agents",
         description: "List all registered agents",
-        inputSchema: zodToJsonSchema(z.object({})), // Add specific input schema here
+        inputSchema: zodToJsonSchema(z.object({})),
       },
       {
         name: "recent_messages",
         description: "Retrieve recent messages",
-        inputSchema: zodToJsonSchema(z.object({})), // Add specific input schema here
+        inputSchema: zodToJsonSchema(z.object({})),
       },
       {
         name: "add_message",
         description: "Add a new message",
-        inputSchema: zodToJsonSchema(
-          z.object({
-            senderId: z.string(),
-            content: z.string(),
-          }),
-        ),
+        inputSchema: zodToJsonSchema(addMessageSchema),
       },
     ],
   };
@@ -57,10 +58,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
-    if (!request.params.arguments) {
-      throw new Error("Arguments are required");
-    }
-
     switch (request.params.name) {
       case "register_agent": {
         const result = registerAgent();
@@ -84,13 +81,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "add_message": {
-        const args = z
-          .object({
-            senderId: z.string(),
-            content: z.string(),
-          })
-          .parse(request.params.arguments);
-
+        const args = addMessageSchema.parse(request.params.arguments);
         addMessage(args.senderId, args.content);
         return {
           content: [{ type: "text", text: "Message added successfully." }],
@@ -101,7 +92,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         throw new Error(`Unknown tool: ${request.params.name}`);
     }
   } catch (error) {
-    throw new Error(`Error processing request: ${error.message}`);
+    throw new Error(`Error processing request: ${error instanceof Error ? error.message : 'unknown error'}`);
   }
 });
 
@@ -111,8 +102,7 @@ async function runServer() {
   console.error("P1 MCP Server running on stdio");
 }
 
-runServer().catch((err) => {
-  const error = err as Error;
-  console.error("Fatal error in main():", error.message);
+runServer().catch((error: unknown) => {
+  console.error("Fatal error in main():", error instanceof Error ? error.message : 'Unknown error occurred');
   process.exit(1);
 });
