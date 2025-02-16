@@ -1,0 +1,38 @@
+{
+  "name": "p1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
+    "lint": "eslint .",
+    "serve": "node dist/index.cjs",
+    "test": "jest",
+    "build": "node esbuild.config.cjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "mcp-server-goose-team": "dist/index.js"
+  },
+  "type": "module",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "esbuild": "^0.17.18",
+    "eslint": "^9.20.1",
+    "jest": "^29.7.0",
+    "prettier": "^3.5.1",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.5.0",
+    "@types/express": "^5.0.0",
+    "express": "^4.21.2"
+  }
+}
