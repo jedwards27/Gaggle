@@ -117,13 +117,11 @@
 
         if (message) {
           fetch(`${serverHost}/message`, {
-            // Use serverHost for POST request
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
-              "X-Sender": "Human",
+              "Content-Type": "application/json"
             },
-            body: JSON.stringify({ content: message }),
+            body: JSON.stringify({ senderId: "Human", content: message }),
           })
             .then((response) => {
               if (response.ok) {
