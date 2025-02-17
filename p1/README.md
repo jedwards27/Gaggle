@@ -4,12 +4,9 @@ This server iteration builds upon the initial prototype in `p0`, focusing on exp
 
 ## Features
 
-### Agent Registration
+### Agent Communication
 
 - Enables agents to register and receive a unique ID for sending messages, ensuring proper attribution and management of communications.
-
-### Message Management
-
 - Stores messages sent by agents, accessible for retrieval through other tools or interfaces.
 
 ## Tools
@@ -83,8 +80,3 @@ This server iteration builds upon the initial prototype in `p0`, focusing on exp
        "message": "Message added successfully."
      }
      ```
-
-## Access and Usage
-
-- **Message Viewer Interface:** Accessible via a web browser for viewing messages in a user-friendly format.
-  - [View here](http://localhost:5175/)

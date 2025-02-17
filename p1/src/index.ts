@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import express from "express";
+import cors from 'cors';
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -17,6 +19,9 @@ const addMessageSchema = z.object({
   content: z.string().nonempty("Content is required"),
 });
 
+const app = express();
+app.use(cors()); // Enable CORS globally
+
 const server = new Server(
   {
     name: "p1-mcp-server",
@@ -28,6 +33,26 @@ const server = new Server(
     },
   },
 );
+
+let transport: SSEServerTransport;
+
+app.get("/sse", async (req, res) => {
+  transport = new SSEServerTransport("/message", res);
+  await server.connect(transport);
+
+  server.onclose = async () => {
+    await server.close();
+    process.exit(0);
+  };
+});
+
+app.post("/message", async (req, res) => {
+  await transport.handlePostMessage(req, res);
+});
+
+app.listen(5175, () => {
+  console.log("P1 MCP Server running with SSE on port 5175");
+});
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
@@ -94,15 +119,4 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   } catch (error) {
     throw new Error(`Error processing request: ${error instanceof Error ? error.message : 'unknown error'}`);
   }
-});
-
-async function runServer() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("P1 MCP Server running on stdio");
-}
-
-runServer().catch((error: unknown) => {
-  console.error("Fatal error in main():", error instanceof Error ? error.message : 'Unknown error occurred');
-  process.exit(1);
 });
