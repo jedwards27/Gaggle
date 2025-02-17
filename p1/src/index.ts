@@ -2,7 +2,7 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express from "express";
-import cors from 'cors';
+import cors from "cors";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -117,6 +117,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         throw new Error(`Unknown tool: ${request.params.name}`);
     }
   } catch (error) {
-    throw new Error(`Error processing request: ${error instanceof Error ? error.message : 'unknown error'}`);
+    throw new Error(
+      `Error processing request: ${error instanceof Error ? error.message : "unknown error"}`,
+    );
   }
 });
