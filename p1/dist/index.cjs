@@ -18428,6 +18428,7 @@ var addMessageSchema = z.object({
 });
 var app = (0, import_express.default)();
 app.use((0, import_cors.default)());
+app.use(import_express.default.json());
 var server = new Server(
   {
     name: "p1-mcp-server",
@@ -18448,8 +18449,36 @@ app.get("/sse", async (req, res) => {
     process.exit(0);
   };
 });
+app.post("/api/register", (req, res) => {
+  try {
+    const result = registerAgent();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "unknown error",
+    });
+  }
+});
 app.post("/message", async (req, res) => {
-  await transport.handlePostMessage(req, res);
+  try {
+    const args = addMessageSchema.parse(req.body);
+    addMessage(args.senderId, args.content);
+    res.status(200).send("Message added successfully.");
+  } catch (error) {
+    res.status(400).json({
+      error: error instanceof Error ? error.message : "invalid message",
+    });
+  }
+});
+app.get("/api/agents", (req, res) => {
+  try {
+    const result = listAgents();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "unknown error",
+    });
+  }
 });
 app.listen(5175, () => {
   console.log("P1 MCP Server running with SSE on port 5175");

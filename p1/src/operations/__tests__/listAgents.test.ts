@@ -10,21 +10,21 @@ describe("listAgents", () => {
 
   it("should return an empty list when there are no agents", () => {
     const result = listAgents();
-    expect(result.agents.length).toBe(0);
+    expect(result.length).toBe(0);
   });
 
   it("should list all registered agents", () => {
     const agent1 = AgentStore.registerAgent();
     const agent2 = AgentStore.registerAgent();
     const result = listAgents();
-    expect(result.agents).toEqual(expect.arrayContaining([agent1, agent2]));
+    expect(result).toEqual(expect.arrayContaining([agent1, agent2]));
   });
 
   it("should maintain the order of registration", () => {
     const agent1 = AgentStore.registerAgent();
     const agent2 = AgentStore.registerAgent();
     const result = listAgents();
-    expect(result.agents[0].id).toBe(agent1.id);
-    expect(result.agents[1].id).toBe(agent2.id);
+    expect(result[0].id).toBe(agent1.id);
+    expect(result[1].id).toBe(agent2.id);
   });
 });
