@@ -1,9 +1,4 @@
-import express, { Request, Response } from "express";
-import cors from "cors";
-import type { Server as HTTPServer } from "http";
-
 import { Server as MCPServer } from "@modelcontextprotocol/sdk/server/index.js";
-import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
@@ -20,10 +15,6 @@ const addMessageSchema = z.object({
   content: z.string().nonempty("Content is required"),
 });
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
 // Instantiate the MCP server
 const mcpServer = new MCPServer(
   {
@@ -36,67 +27,6 @@ const mcpServer = new MCPServer(
     },
   },
 );
-
-/**
- * SSE endpoint
- * Let SSEServerTransport set the headers.
- */
-app.get("/sse", (req: Request, res: Response): void => {
-  // Do NOT write or set headers here, let SSEServerTransport handle it.
-  const transport = new SSEServerTransport("/message", res);
-  mcpServer.connect(transport).catch((err) => {
-    console.error("Error connecting SSE:", err);
-  });
-});
-
-// register endpoint
-app.post("/api/register", (req: Request, res: Response): void => {
-  try {
-    const result = registerAgent();
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : "unknown error",
-    });
-  }
-});
-
-// add message endpoint
-app.post("/message", (req: Request, res: Response): void => {
-  try {
-    const args = addMessageSchema.parse(req.body);
-    addMessage(args.senderId, args.content);
-    res.status(200).send("Message added successfully.");
-  } catch (error) {
-    res.status(400).json({
-      error: error instanceof Error ? error.message : "invalid message",
-    });
-  }
-});
-
-// list agents endpoint
-app.get("/api/agents", (req: Request, res: Response): void => {
-  try {
-    const result = listAgents();
-    res.status(200).json(Array.isArray(result) ? result : []);
-  } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : "unknown error",
-    });
-  }
-});
-
-// function to start the express server
-export function startServer(port = 5175): HTTPServer {
-  return app.listen(port, () => {
-    console.log(`P1 MCP Server running with SSE on port ${port}`);
-  });
-}
-
-// If invoked directly (not imported), start the server
-if (require.main === module) {
-  startServer(5175);
-}
 
 // Register MCP request handlers
 mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
