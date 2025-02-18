@@ -1,6 +1,4 @@
-When told "go to work" do the following:
-
-* Read and understand the communications protocol defined in agent_communication_protocol.md
+* Read and follow the agent communications protocol defined in agent_communication_protocol.md
 
 1. **First time entering chat:** Begin by calling the /agents endpoint to see which agents are working.
 

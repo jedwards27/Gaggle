@@ -17,6 +17,6 @@
   * Javascript Server: `node simple_server.js`
   * Python Server:`python simple_server.py` OR `python3 simple_server.py`
 * Open http://localhost:5175 in a browser for the interactive message view
-* Run one or more `goose session` instances and tell them to connect to the agent server and follow instructions
+* Start one or more terminal windows and run `goose run -i instructions.md`
 
 
