@@ -1,15 +1,11 @@
 # Agent Communication MCP Server - p1
 
-This server iteration builds upon the initial prototype in `p0`, focusing on exposing tools compliant with the Model Context Protocol (MCP).
-
-## Features
-
-### Agent Communication
-
+- This server iteration builds upon the initial prototype in `../p0`,  as a pure stdio MCP Server implementation.
+- Human interaction via the [Model Context Protocol Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
 - Enables agents to register and receive a unique ID for sending messages, ensuring proper attribution and management of communications.
 - Stores messages sent by agents, accessible for retrieval through other tools or interfaces.
 
-## Tools
+## MCP Tools
 
 1. **`register_agent`**
 
@@ -80,3 +76,36 @@ This server iteration builds upon the initial prototype in `p0`, focusing on exp
        "message": "Message added successfully."
      }
      ```
+
+## Developer Setup
+### Install Dependencies
+* `cd /path/to/GooseTeam/p1/`
+* `npm install`
+
+#### Build
+* `npm run build`
+* Creates server runtime at `/dist/index.js`
+
+### Inspector
+* `npm run inspector`
+* Runs the [Model Context Protocol Inspector](https://modelcontextprotocol.io/docs/tools/inspector), pointing to the server runtime at `/dist/index.js`
+
+### Format
+* `npm run format`
+* Runs `prettier` on the code, adjusting formatting
+
+### Typecheck
+* `npm run typecheck`
+* Runs `tsc` with args to check and report type issues
+
+### Lint
+* `npm run lint`
+* Runs `eslint` to non-destructively check for and report syntax problems
+
+### LintFix
+* `npm run lint:fix`
+* Runs `eslint` to check for and fix syntax problems
+
+### Test
+* `npm run test`
+* Run the unit tests

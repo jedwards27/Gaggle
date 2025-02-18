@@ -4,10 +4,11 @@
   "main": "index.js",
   "scripts": {
     "build": "node esbuild.config.cjs",
-    "serve": "node dist/index.cjs",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.cjs",
     "format": "prettier --write .",
-    "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "jest"
   },
   "files": [
@@ -34,6 +35,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@modelcontextprotocol/inspector": "^0.4.1",
     "@modelcontextprotocol/sdk": "^1.5.0",
     "@types/express": "^5.0.0",
     "cors": "^2.8.5",

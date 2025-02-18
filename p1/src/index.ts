@@ -1,13 +1,16 @@
-import { Server as MCPServer } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import { Server as MCPServer } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+import { VERSION } from "./common/version.js";
 import { registerAgent } from "./operations/registerAgent.ts";
 import { listAgents } from "./operations/listAgents.ts";
 import { recentMessages, addMessage } from "./operations/recentMessages.ts";
-import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 // Define schema for add_message tool
 const addMessageSchema = z.object({
@@ -19,7 +22,7 @@ const addMessageSchema = z.object({
 const mcpServer = new MCPServer(
   {
     name: "p1-mcp-server",
-    version: "1.0.0",
+    version: VERSION,
   },
   {
     capabilities: {
@@ -94,4 +97,15 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       }`,
     );
   }
+});
+
+async function runServer() {
+  const transport = new StdioServerTransport();
+  await mcpServer.connect(transport);
+  console.error("GooseTeam MCP Server running on stdio");
+}
+
+runServer().catch((error) => {
+  console.error("Fatal error in main():", error);
+  process.exit(1);
 });

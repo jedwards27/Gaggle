@@ -1,6 +1,27 @@
 "use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 var __publicField = (obj, key, value) => {
   __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
   return value;
@@ -4784,549 +4805,6 @@ var McpError = class extends Error {
   }
 };
 
-// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js
-var DEFAULT_REQUEST_TIMEOUT_MSEC = 6e4;
-var Protocol = class {
-  constructor(_options) {
-    this._options = _options;
-    this._requestMessageId = 0;
-    this._requestHandlers = /* @__PURE__ */ new Map();
-    this._requestHandlerAbortControllers = /* @__PURE__ */ new Map();
-    this._notificationHandlers = /* @__PURE__ */ new Map();
-    this._responseHandlers = /* @__PURE__ */ new Map();
-    this._progressHandlers = /* @__PURE__ */ new Map();
-    this.setNotificationHandler(CancelledNotificationSchema, (notification) => {
-      const controller = this._requestHandlerAbortControllers.get(notification.params.requestId);
-      controller === null || controller === void 0 ? void 0 : controller.abort(notification.params.reason);
-    });
-    this.setNotificationHandler(ProgressNotificationSchema, (notification) => {
-      this._onprogress(notification);
-    });
-    this.setRequestHandler(
-      PingRequestSchema,
-      // Automatic pong by default.
-      (_request) => ({})
-    );
-  }
-  /**
-   * Attaches to the given transport, starts it, and starts listening for messages.
-   *
-   * The Protocol object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
-   */
-  async connect(transport) {
-    this._transport = transport;
-    this._transport.onclose = () => {
-      this._onclose();
-    };
-    this._transport.onerror = (error) => {
-      this._onerror(error);
-    };
-    this._transport.onmessage = (message) => {
-      if (!("method" in message)) {
-        this._onresponse(message);
-      } else if ("id" in message) {
-        this._onrequest(message);
-      } else {
-        this._onnotification(message);
-      }
-    };
-    await this._transport.start();
-  }
-  _onclose() {
-    var _a;
-    const responseHandlers = this._responseHandlers;
-    this._responseHandlers = /* @__PURE__ */ new Map();
-    this._progressHandlers.clear();
-    this._transport = void 0;
-    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
-    const error = new McpError(ErrorCode.ConnectionClosed, "Connection closed");
-    for (const handler of responseHandlers.values()) {
-      handler(error);
-    }
-  }
-  _onerror(error) {
-    var _a;
-    (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
-  }
-  _onnotification(notification) {
-    var _a;
-    const handler = (_a = this._notificationHandlers.get(notification.method)) !== null && _a !== void 0 ? _a : this.fallbackNotificationHandler;
-    if (handler === void 0) {
-      return;
-    }
-    Promise.resolve().then(() => handler(notification)).catch((error) => this._onerror(new Error(`Uncaught error in notification handler: ${error}`)));
-  }
-  _onrequest(request) {
-    var _a, _b;
-    const handler = (_a = this._requestHandlers.get(request.method)) !== null && _a !== void 0 ? _a : this.fallbackRequestHandler;
-    if (handler === void 0) {
-      (_b = this._transport) === null || _b === void 0 ? void 0 : _b.send({
-        jsonrpc: "2.0",
-        id: request.id,
-        error: {
-          code: ErrorCode.MethodNotFound,
-          message: "Method not found"
-        }
-      }).catch((error) => this._onerror(new Error(`Failed to send an error response: ${error}`)));
-      return;
-    }
-    const abortController = new AbortController();
-    this._requestHandlerAbortControllers.set(request.id, abortController);
-    Promise.resolve().then(() => handler(request, { signal: abortController.signal })).then((result) => {
-      var _a2;
-      if (abortController.signal.aborted) {
-        return;
-      }
-      return (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
-        result,
-        jsonrpc: "2.0",
-        id: request.id
-      });
-    }, (error) => {
-      var _a2, _b2;
-      if (abortController.signal.aborted) {
-        return;
-      }
-      return (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
-        jsonrpc: "2.0",
-        id: request.id,
-        error: {
-          code: Number.isSafeInteger(error["code"]) ? error["code"] : ErrorCode.InternalError,
-          message: (_b2 = error.message) !== null && _b2 !== void 0 ? _b2 : "Internal error"
-        }
-      });
-    }).catch((error) => this._onerror(new Error(`Failed to send response: ${error}`))).finally(() => {
-      this._requestHandlerAbortControllers.delete(request.id);
-    });
-  }
-  _onprogress(notification) {
-    const { progressToken, ...params } = notification.params;
-    const handler = this._progressHandlers.get(Number(progressToken));
-    if (handler === void 0) {
-      this._onerror(new Error(`Received a progress notification for an unknown token: ${JSON.stringify(notification)}`));
-      return;
-    }
-    handler(params);
-  }
-  _onresponse(response) {
-    const messageId = response.id;
-    const handler = this._responseHandlers.get(Number(messageId));
-    if (handler === void 0) {
-      this._onerror(new Error(`Received a response for an unknown message ID: ${JSON.stringify(response)}`));
-      return;
-    }
-    this._responseHandlers.delete(Number(messageId));
-    this._progressHandlers.delete(Number(messageId));
-    if ("result" in response) {
-      handler(response);
-    } else {
-      const error = new McpError(response.error.code, response.error.message, response.error.data);
-      handler(error);
-    }
-  }
-  get transport() {
-    return this._transport;
-  }
-  /**
-   * Closes the connection.
-   */
-  async close() {
-    var _a;
-    await ((_a = this._transport) === null || _a === void 0 ? void 0 : _a.close());
-  }
-  /**
-   * Sends a request and wait for a response.
-   *
-   * Do not use this method to emit notifications! Use notification() instead.
-   */
-  request(request, resultSchema, options) {
-    return new Promise((resolve, reject) => {
-      var _a, _b, _c, _d;
-      if (!this._transport) {
-        reject(new Error("Not connected"));
-        return;
-      }
-      if (((_a = this._options) === null || _a === void 0 ? void 0 : _a.enforceStrictCapabilities) === true) {
-        this.assertCapabilityForMethod(request.method);
-      }
-      (_b = options === null || options === void 0 ? void 0 : options.signal) === null || _b === void 0 ? void 0 : _b.throwIfAborted();
-      const messageId = this._requestMessageId++;
-      const jsonrpcRequest = {
-        ...request,
-        jsonrpc: "2.0",
-        id: messageId
-      };
-      if (options === null || options === void 0 ? void 0 : options.onprogress) {
-        this._progressHandlers.set(messageId, options.onprogress);
-        jsonrpcRequest.params = {
-          ...request.params,
-          _meta: { progressToken: messageId }
-        };
-      }
-      let timeoutId = void 0;
-      this._responseHandlers.set(messageId, (response) => {
-        var _a2;
-        if (timeoutId !== void 0) {
-          clearTimeout(timeoutId);
-        }
-        if ((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.aborted) {
-          return;
-        }
-        if (response instanceof Error) {
-          return reject(response);
-        }
-        try {
-          const result = resultSchema.parse(response.result);
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      const cancel = (reason) => {
-        var _a2;
-        this._responseHandlers.delete(messageId);
-        this._progressHandlers.delete(messageId);
-        (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
-          jsonrpc: "2.0",
-          method: "notifications/cancelled",
-          params: {
-            requestId: messageId,
-            reason: String(reason)
-          }
-        }).catch((error) => this._onerror(new Error(`Failed to send cancellation: ${error}`)));
-        reject(reason);
-      };
-      (_c = options === null || options === void 0 ? void 0 : options.signal) === null || _c === void 0 ? void 0 : _c.addEventListener("abort", () => {
-        var _a2;
-        if (timeoutId !== void 0) {
-          clearTimeout(timeoutId);
-        }
-        cancel((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.reason);
-      });
-      const timeout = (_d = options === null || options === void 0 ? void 0 : options.timeout) !== null && _d !== void 0 ? _d : DEFAULT_REQUEST_TIMEOUT_MSEC;
-      timeoutId = setTimeout(() => cancel(new McpError(ErrorCode.RequestTimeout, "Request timed out", {
-        timeout
-      })), timeout);
-      this._transport.send(jsonrpcRequest).catch((error) => {
-        if (timeoutId !== void 0) {
-          clearTimeout(timeoutId);
-        }
-        reject(error);
-      });
-    });
-  }
-  /**
-   * Emits a notification, which is a one-way message that does not expect a response.
-   */
-  async notification(notification) {
-    if (!this._transport) {
-      throw new Error("Not connected");
-    }
-    this.assertNotificationCapability(notification.method);
-    const jsonrpcNotification = {
-      ...notification,
-      jsonrpc: "2.0"
-    };
-    await this._transport.send(jsonrpcNotification);
-  }
-  /**
-   * Registers a handler to invoke when this protocol object receives a request with the given method.
-   *
-   * Note that this will replace any previous request handler for the same method.
-   */
-  setRequestHandler(requestSchema, handler) {
-    const method = requestSchema.shape.method.value;
-    this.assertRequestHandlerCapability(method);
-    this._requestHandlers.set(method, (request, extra) => Promise.resolve(handler(requestSchema.parse(request), extra)));
-  }
-  /**
-   * Removes the request handler for the given method.
-   */
-  removeRequestHandler(method) {
-    this._requestHandlers.delete(method);
-  }
-  /**
-   * Asserts that a request handler has not already been set for the given method, in preparation for a new one being automatically installed.
-   */
-  assertCanSetRequestHandler(method) {
-    if (this._requestHandlers.has(method)) {
-      throw new Error(`A request handler for ${method} already exists, which would be overridden`);
-    }
-  }
-  /**
-   * Registers a handler to invoke when this protocol object receives a notification with the given method.
-   *
-   * Note that this will replace any previous notification handler for the same method.
-   */
-  setNotificationHandler(notificationSchema, handler) {
-    this._notificationHandlers.set(notificationSchema.shape.method.value, (notification) => Promise.resolve(handler(notificationSchema.parse(notification))));
-  }
-  /**
-   * Removes the notification handler for the given method.
-   */
-  removeNotificationHandler(method) {
-    this._notificationHandlers.delete(method);
-  }
-};
-function mergeCapabilities(base, additional) {
-  return Object.entries(additional).reduce((acc, [key, value]) => {
-    if (value && typeof value === "object") {
-      acc[key] = acc[key] ? { ...acc[key], ...value } : value;
-    } else {
-      acc[key] = value;
-    }
-    return acc;
-  }, { ...base });
-}
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js
-var Server = class extends Protocol {
-  /**
-   * Initializes this server with the given name and version information.
-   */
-  constructor(_serverInfo, options) {
-    var _a;
-    super(options);
-    this._serverInfo = _serverInfo;
-    this._capabilities = (_a = options === null || options === void 0 ? void 0 : options.capabilities) !== null && _a !== void 0 ? _a : {};
-    this._instructions = options === null || options === void 0 ? void 0 : options.instructions;
-    this.setRequestHandler(InitializeRequestSchema, (request) => this._oninitialize(request));
-    this.setNotificationHandler(InitializedNotificationSchema, () => {
-      var _a2;
-      return (_a2 = this.oninitialized) === null || _a2 === void 0 ? void 0 : _a2.call(this);
-    });
-  }
-  /**
-   * Registers new capabilities. This can only be called before connecting to a transport.
-   *
-   * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
-   */
-  registerCapabilities(capabilities) {
-    if (this.transport) {
-      throw new Error("Cannot register capabilities after connecting to transport");
-    }
-    this._capabilities = mergeCapabilities(this._capabilities, capabilities);
-  }
-  assertCapabilityForMethod(method) {
-    var _a, _b;
-    switch (method) {
-      case "sampling/createMessage":
-        if (!((_a = this._clientCapabilities) === null || _a === void 0 ? void 0 : _a.sampling)) {
-          throw new Error(`Client does not support sampling (required for ${method})`);
-        }
-        break;
-      case "roots/list":
-        if (!((_b = this._clientCapabilities) === null || _b === void 0 ? void 0 : _b.roots)) {
-          throw new Error(`Client does not support listing roots (required for ${method})`);
-        }
-        break;
-      case "ping":
-        break;
-    }
-  }
-  assertNotificationCapability(method) {
-    switch (method) {
-      case "notifications/message":
-        if (!this._capabilities.logging) {
-          throw new Error(`Server does not support logging (required for ${method})`);
-        }
-        break;
-      case "notifications/resources/updated":
-      case "notifications/resources/list_changed":
-        if (!this._capabilities.resources) {
-          throw new Error(`Server does not support notifying about resources (required for ${method})`);
-        }
-        break;
-      case "notifications/tools/list_changed":
-        if (!this._capabilities.tools) {
-          throw new Error(`Server does not support notifying of tool list changes (required for ${method})`);
-        }
-        break;
-      case "notifications/prompts/list_changed":
-        if (!this._capabilities.prompts) {
-          throw new Error(`Server does not support notifying of prompt list changes (required for ${method})`);
-        }
-        break;
-      case "notifications/cancelled":
-        break;
-      case "notifications/progress":
-        break;
-    }
-  }
-  assertRequestHandlerCapability(method) {
-    switch (method) {
-      case "sampling/createMessage":
-        if (!this._capabilities.sampling) {
-          throw new Error(`Server does not support sampling (required for ${method})`);
-        }
-        break;
-      case "logging/setLevel":
-        if (!this._capabilities.logging) {
-          throw new Error(`Server does not support logging (required for ${method})`);
-        }
-        break;
-      case "prompts/get":
-      case "prompts/list":
-        if (!this._capabilities.prompts) {
-          throw new Error(`Server does not support prompts (required for ${method})`);
-        }
-        break;
-      case "resources/list":
-      case "resources/templates/list":
-      case "resources/read":
-        if (!this._capabilities.resources) {
-          throw new Error(`Server does not support resources (required for ${method})`);
-        }
-        break;
-      case "tools/call":
-      case "tools/list":
-        if (!this._capabilities.tools) {
-          throw new Error(`Server does not support tools (required for ${method})`);
-        }
-        break;
-      case "ping":
-      case "initialize":
-        break;
-    }
-  }
-  async _oninitialize(request) {
-    const requestedVersion = request.params.protocolVersion;
-    this._clientCapabilities = request.params.capabilities;
-    this._clientVersion = request.params.clientInfo;
-    return {
-      protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion) ? requestedVersion : LATEST_PROTOCOL_VERSION,
-      capabilities: this.getCapabilities(),
-      serverInfo: this._serverInfo,
-      ...this._instructions && { instructions: this._instructions }
-    };
-  }
-  /**
-   * After initialization has completed, this will be populated with the client's reported capabilities.
-   */
-  getClientCapabilities() {
-    return this._clientCapabilities;
-  }
-  /**
-   * After initialization has completed, this will be populated with information about the client's name and version.
-   */
-  getClientVersion() {
-    return this._clientVersion;
-  }
-  getCapabilities() {
-    return this._capabilities;
-  }
-  async ping() {
-    return this.request({ method: "ping" }, EmptyResultSchema);
-  }
-  async createMessage(params, options) {
-    return this.request({ method: "sampling/createMessage", params }, CreateMessageResultSchema, options);
-  }
-  async listRoots(params, options) {
-    return this.request({ method: "roots/list", params }, ListRootsResultSchema, options);
-  }
-  async sendLoggingMessage(params) {
-    return this.notification({ method: "notifications/message", params });
-  }
-  async sendResourceUpdated(params) {
-    return this.notification({
-      method: "notifications/resources/updated",
-      params
-    });
-  }
-  async sendResourceListChanged() {
-    return this.notification({
-      method: "notifications/resources/list_changed"
-    });
-  }
-  async sendToolListChanged() {
-    return this.notification({ method: "notifications/tools/list_changed" });
-  }
-  async sendPromptListChanged() {
-    return this.notification({ method: "notifications/prompts/list_changed" });
-  }
-};
-
-// src/operations/agentStore.ts
-var AgentStore = class {
-  static registerAgent() {
-    const agentId = `agent${this.agents.length + 1}`;
-    const color = this.colors[this.agents.length % this.colors.length];
-    const newAgent = { id: agentId, color };
-    this.agents.push(newAgent);
-    return newAgent;
-  }
-  static getAgents() {
-    return this.agents;
-  }
-  static clearAgents() {
-    this.agents = [];
-  }
-  static getAgentById(id) {
-    return this.agents.find((agent) => agent.id === id);
-  }
-  static countAgents() {
-    return this.agents.length;
-  }
-};
-__publicField(AgentStore, "agents", []);
-__publicField(AgentStore, "colors", [
-  "red",
-  "green",
-  "blue",
-  "orange",
-  "purple"
-]);
-var agentStore_default = AgentStore;
-
-// src/operations/registerAgent.ts
-function registerAgent() {
-  const agent = agentStore_default.registerAgent();
-  return { agentId: agent.id, color: agent.color };
-}
-
-// src/operations/listAgents.ts
-function listAgents() {
-  return agentStore_default.getAgents();
-}
-
-// src/operations/messageStore.ts
-var MessageStore = class {
-  // Maximum number of messages to store
-  static addMessage(senderId, content) {
-    const message = {
-      id: `msg${this.messages.length + 1}`,
-      senderId,
-      content,
-      timestamp: /* @__PURE__ */ new Date()
-    };
-    this.messages.push(message);
-    if (this.messages.length > this.messageLimit) {
-      this.messages.shift();
-    }
-  }
-  static getRecentMessages(limit = 3) {
-    return this.messages.slice(-limit).reverse();
-  }
-  static clearMessages() {
-    this.messages = [];
-  }
-  static getMessages() {
-    return this.messages;
-  }
-};
-__publicField(MessageStore, "messages", []);
-__publicField(MessageStore, "messageLimit", 100);
-var messageStore_default = MessageStore;
-
-// src/operations/recentMessages.ts
-function recentMessages() {
-  const messages = messageStore_default.getRecentMessages();
-  return { messages };
-}
-function addMessage(senderId, content) {
-  messageStore_default.addMessage(senderId, content);
-}
-
 // node_modules/zod-to-json-schema/dist/esm/Options.js
 var ignoreOverride = Symbol("Let zodToJsonSchema decide on which parser to use");
 var defaultOptions = {
@@ -6552,6 +6030,647 @@ var zodToJsonSchema = (schema, options) => {
   return combined;
 };
 
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/protocol.js
+var DEFAULT_REQUEST_TIMEOUT_MSEC = 6e4;
+var Protocol = class {
+  constructor(_options) {
+    this._options = _options;
+    this._requestMessageId = 0;
+    this._requestHandlers = /* @__PURE__ */ new Map();
+    this._requestHandlerAbortControllers = /* @__PURE__ */ new Map();
+    this._notificationHandlers = /* @__PURE__ */ new Map();
+    this._responseHandlers = /* @__PURE__ */ new Map();
+    this._progressHandlers = /* @__PURE__ */ new Map();
+    this.setNotificationHandler(CancelledNotificationSchema, (notification) => {
+      const controller = this._requestHandlerAbortControllers.get(notification.params.requestId);
+      controller === null || controller === void 0 ? void 0 : controller.abort(notification.params.reason);
+    });
+    this.setNotificationHandler(ProgressNotificationSchema, (notification) => {
+      this._onprogress(notification);
+    });
+    this.setRequestHandler(
+      PingRequestSchema,
+      // Automatic pong by default.
+      (_request) => ({})
+    );
+  }
+  /**
+   * Attaches to the given transport, starts it, and starts listening for messages.
+   *
+   * The Protocol object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
+   */
+  async connect(transport) {
+    this._transport = transport;
+    this._transport.onclose = () => {
+      this._onclose();
+    };
+    this._transport.onerror = (error) => {
+      this._onerror(error);
+    };
+    this._transport.onmessage = (message) => {
+      if (!("method" in message)) {
+        this._onresponse(message);
+      } else if ("id" in message) {
+        this._onrequest(message);
+      } else {
+        this._onnotification(message);
+      }
+    };
+    await this._transport.start();
+  }
+  _onclose() {
+    var _a;
+    const responseHandlers = this._responseHandlers;
+    this._responseHandlers = /* @__PURE__ */ new Map();
+    this._progressHandlers.clear();
+    this._transport = void 0;
+    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
+    const error = new McpError(ErrorCode.ConnectionClosed, "Connection closed");
+    for (const handler of responseHandlers.values()) {
+      handler(error);
+    }
+  }
+  _onerror(error) {
+    var _a;
+    (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
+  }
+  _onnotification(notification) {
+    var _a;
+    const handler = (_a = this._notificationHandlers.get(notification.method)) !== null && _a !== void 0 ? _a : this.fallbackNotificationHandler;
+    if (handler === void 0) {
+      return;
+    }
+    Promise.resolve().then(() => handler(notification)).catch((error) => this._onerror(new Error(`Uncaught error in notification handler: ${error}`)));
+  }
+  _onrequest(request) {
+    var _a, _b;
+    const handler = (_a = this._requestHandlers.get(request.method)) !== null && _a !== void 0 ? _a : this.fallbackRequestHandler;
+    if (handler === void 0) {
+      (_b = this._transport) === null || _b === void 0 ? void 0 : _b.send({
+        jsonrpc: "2.0",
+        id: request.id,
+        error: {
+          code: ErrorCode.MethodNotFound,
+          message: "Method not found"
+        }
+      }).catch((error) => this._onerror(new Error(`Failed to send an error response: ${error}`)));
+      return;
+    }
+    const abortController = new AbortController();
+    this._requestHandlerAbortControllers.set(request.id, abortController);
+    Promise.resolve().then(() => handler(request, { signal: abortController.signal })).then((result) => {
+      var _a2;
+      if (abortController.signal.aborted) {
+        return;
+      }
+      return (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
+        result,
+        jsonrpc: "2.0",
+        id: request.id
+      });
+    }, (error) => {
+      var _a2, _b2;
+      if (abortController.signal.aborted) {
+        return;
+      }
+      return (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
+        jsonrpc: "2.0",
+        id: request.id,
+        error: {
+          code: Number.isSafeInteger(error["code"]) ? error["code"] : ErrorCode.InternalError,
+          message: (_b2 = error.message) !== null && _b2 !== void 0 ? _b2 : "Internal error"
+        }
+      });
+    }).catch((error) => this._onerror(new Error(`Failed to send response: ${error}`))).finally(() => {
+      this._requestHandlerAbortControllers.delete(request.id);
+    });
+  }
+  _onprogress(notification) {
+    const { progressToken, ...params } = notification.params;
+    const handler = this._progressHandlers.get(Number(progressToken));
+    if (handler === void 0) {
+      this._onerror(new Error(`Received a progress notification for an unknown token: ${JSON.stringify(notification)}`));
+      return;
+    }
+    handler(params);
+  }
+  _onresponse(response) {
+    const messageId = response.id;
+    const handler = this._responseHandlers.get(Number(messageId));
+    if (handler === void 0) {
+      this._onerror(new Error(`Received a response for an unknown message ID: ${JSON.stringify(response)}`));
+      return;
+    }
+    this._responseHandlers.delete(Number(messageId));
+    this._progressHandlers.delete(Number(messageId));
+    if ("result" in response) {
+      handler(response);
+    } else {
+      const error = new McpError(response.error.code, response.error.message, response.error.data);
+      handler(error);
+    }
+  }
+  get transport() {
+    return this._transport;
+  }
+  /**
+   * Closes the connection.
+   */
+  async close() {
+    var _a;
+    await ((_a = this._transport) === null || _a === void 0 ? void 0 : _a.close());
+  }
+  /**
+   * Sends a request and wait for a response.
+   *
+   * Do not use this method to emit notifications! Use notification() instead.
+   */
+  request(request, resultSchema, options) {
+    return new Promise((resolve, reject) => {
+      var _a, _b, _c, _d;
+      if (!this._transport) {
+        reject(new Error("Not connected"));
+        return;
+      }
+      if (((_a = this._options) === null || _a === void 0 ? void 0 : _a.enforceStrictCapabilities) === true) {
+        this.assertCapabilityForMethod(request.method);
+      }
+      (_b = options === null || options === void 0 ? void 0 : options.signal) === null || _b === void 0 ? void 0 : _b.throwIfAborted();
+      const messageId = this._requestMessageId++;
+      const jsonrpcRequest = {
+        ...request,
+        jsonrpc: "2.0",
+        id: messageId
+      };
+      if (options === null || options === void 0 ? void 0 : options.onprogress) {
+        this._progressHandlers.set(messageId, options.onprogress);
+        jsonrpcRequest.params = {
+          ...request.params,
+          _meta: { progressToken: messageId }
+        };
+      }
+      let timeoutId = void 0;
+      this._responseHandlers.set(messageId, (response) => {
+        var _a2;
+        if (timeoutId !== void 0) {
+          clearTimeout(timeoutId);
+        }
+        if ((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.aborted) {
+          return;
+        }
+        if (response instanceof Error) {
+          return reject(response);
+        }
+        try {
+          const result = resultSchema.parse(response.result);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
+      });
+      const cancel = (reason) => {
+        var _a2;
+        this._responseHandlers.delete(messageId);
+        this._progressHandlers.delete(messageId);
+        (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
+          jsonrpc: "2.0",
+          method: "notifications/cancelled",
+          params: {
+            requestId: messageId,
+            reason: String(reason)
+          }
+        }).catch((error) => this._onerror(new Error(`Failed to send cancellation: ${error}`)));
+        reject(reason);
+      };
+      (_c = options === null || options === void 0 ? void 0 : options.signal) === null || _c === void 0 ? void 0 : _c.addEventListener("abort", () => {
+        var _a2;
+        if (timeoutId !== void 0) {
+          clearTimeout(timeoutId);
+        }
+        cancel((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.reason);
+      });
+      const timeout = (_d = options === null || options === void 0 ? void 0 : options.timeout) !== null && _d !== void 0 ? _d : DEFAULT_REQUEST_TIMEOUT_MSEC;
+      timeoutId = setTimeout(() => cancel(new McpError(ErrorCode.RequestTimeout, "Request timed out", {
+        timeout
+      })), timeout);
+      this._transport.send(jsonrpcRequest).catch((error) => {
+        if (timeoutId !== void 0) {
+          clearTimeout(timeoutId);
+        }
+        reject(error);
+      });
+    });
+  }
+  /**
+   * Emits a notification, which is a one-way message that does not expect a response.
+   */
+  async notification(notification) {
+    if (!this._transport) {
+      throw new Error("Not connected");
+    }
+    this.assertNotificationCapability(notification.method);
+    const jsonrpcNotification = {
+      ...notification,
+      jsonrpc: "2.0"
+    };
+    await this._transport.send(jsonrpcNotification);
+  }
+  /**
+   * Registers a handler to invoke when this protocol object receives a request with the given method.
+   *
+   * Note that this will replace any previous request handler for the same method.
+   */
+  setRequestHandler(requestSchema, handler) {
+    const method = requestSchema.shape.method.value;
+    this.assertRequestHandlerCapability(method);
+    this._requestHandlers.set(method, (request, extra) => Promise.resolve(handler(requestSchema.parse(request), extra)));
+  }
+  /**
+   * Removes the request handler for the given method.
+   */
+  removeRequestHandler(method) {
+    this._requestHandlers.delete(method);
+  }
+  /**
+   * Asserts that a request handler has not already been set for the given method, in preparation for a new one being automatically installed.
+   */
+  assertCanSetRequestHandler(method) {
+    if (this._requestHandlers.has(method)) {
+      throw new Error(`A request handler for ${method} already exists, which would be overridden`);
+    }
+  }
+  /**
+   * Registers a handler to invoke when this protocol object receives a notification with the given method.
+   *
+   * Note that this will replace any previous notification handler for the same method.
+   */
+  setNotificationHandler(notificationSchema, handler) {
+    this._notificationHandlers.set(notificationSchema.shape.method.value, (notification) => Promise.resolve(handler(notificationSchema.parse(notification))));
+  }
+  /**
+   * Removes the notification handler for the given method.
+   */
+  removeNotificationHandler(method) {
+    this._notificationHandlers.delete(method);
+  }
+};
+function mergeCapabilities(base, additional) {
+  return Object.entries(additional).reduce((acc, [key, value]) => {
+    if (value && typeof value === "object") {
+      acc[key] = acc[key] ? { ...acc[key], ...value } : value;
+    } else {
+      acc[key] = value;
+    }
+    return acc;
+  }, { ...base });
+}
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/index.js
+var Server = class extends Protocol {
+  /**
+   * Initializes this server with the given name and version information.
+   */
+  constructor(_serverInfo, options) {
+    var _a;
+    super(options);
+    this._serverInfo = _serverInfo;
+    this._capabilities = (_a = options === null || options === void 0 ? void 0 : options.capabilities) !== null && _a !== void 0 ? _a : {};
+    this._instructions = options === null || options === void 0 ? void 0 : options.instructions;
+    this.setRequestHandler(InitializeRequestSchema, (request) => this._oninitialize(request));
+    this.setNotificationHandler(InitializedNotificationSchema, () => {
+      var _a2;
+      return (_a2 = this.oninitialized) === null || _a2 === void 0 ? void 0 : _a2.call(this);
+    });
+  }
+  /**
+   * Registers new capabilities. This can only be called before connecting to a transport.
+   *
+   * The new capabilities will be merged with any existing capabilities previously given (e.g., at initialization).
+   */
+  registerCapabilities(capabilities) {
+    if (this.transport) {
+      throw new Error("Cannot register capabilities after connecting to transport");
+    }
+    this._capabilities = mergeCapabilities(this._capabilities, capabilities);
+  }
+  assertCapabilityForMethod(method) {
+    var _a, _b;
+    switch (method) {
+      case "sampling/createMessage":
+        if (!((_a = this._clientCapabilities) === null || _a === void 0 ? void 0 : _a.sampling)) {
+          throw new Error(`Client does not support sampling (required for ${method})`);
+        }
+        break;
+      case "roots/list":
+        if (!((_b = this._clientCapabilities) === null || _b === void 0 ? void 0 : _b.roots)) {
+          throw new Error(`Client does not support listing roots (required for ${method})`);
+        }
+        break;
+      case "ping":
+        break;
+    }
+  }
+  assertNotificationCapability(method) {
+    switch (method) {
+      case "notifications/message":
+        if (!this._capabilities.logging) {
+          throw new Error(`Server does not support logging (required for ${method})`);
+        }
+        break;
+      case "notifications/resources/updated":
+      case "notifications/resources/list_changed":
+        if (!this._capabilities.resources) {
+          throw new Error(`Server does not support notifying about resources (required for ${method})`);
+        }
+        break;
+      case "notifications/tools/list_changed":
+        if (!this._capabilities.tools) {
+          throw new Error(`Server does not support notifying of tool list changes (required for ${method})`);
+        }
+        break;
+      case "notifications/prompts/list_changed":
+        if (!this._capabilities.prompts) {
+          throw new Error(`Server does not support notifying of prompt list changes (required for ${method})`);
+        }
+        break;
+      case "notifications/cancelled":
+        break;
+      case "notifications/progress":
+        break;
+    }
+  }
+  assertRequestHandlerCapability(method) {
+    switch (method) {
+      case "sampling/createMessage":
+        if (!this._capabilities.sampling) {
+          throw new Error(`Server does not support sampling (required for ${method})`);
+        }
+        break;
+      case "logging/setLevel":
+        if (!this._capabilities.logging) {
+          throw new Error(`Server does not support logging (required for ${method})`);
+        }
+        break;
+      case "prompts/get":
+      case "prompts/list":
+        if (!this._capabilities.prompts) {
+          throw new Error(`Server does not support prompts (required for ${method})`);
+        }
+        break;
+      case "resources/list":
+      case "resources/templates/list":
+      case "resources/read":
+        if (!this._capabilities.resources) {
+          throw new Error(`Server does not support resources (required for ${method})`);
+        }
+        break;
+      case "tools/call":
+      case "tools/list":
+        if (!this._capabilities.tools) {
+          throw new Error(`Server does not support tools (required for ${method})`);
+        }
+        break;
+      case "ping":
+      case "initialize":
+        break;
+    }
+  }
+  async _oninitialize(request) {
+    const requestedVersion = request.params.protocolVersion;
+    this._clientCapabilities = request.params.capabilities;
+    this._clientVersion = request.params.clientInfo;
+    return {
+      protocolVersion: SUPPORTED_PROTOCOL_VERSIONS.includes(requestedVersion) ? requestedVersion : LATEST_PROTOCOL_VERSION,
+      capabilities: this.getCapabilities(),
+      serverInfo: this._serverInfo,
+      ...this._instructions && { instructions: this._instructions }
+    };
+  }
+  /**
+   * After initialization has completed, this will be populated with the client's reported capabilities.
+   */
+  getClientCapabilities() {
+    return this._clientCapabilities;
+  }
+  /**
+   * After initialization has completed, this will be populated with information about the client's name and version.
+   */
+  getClientVersion() {
+    return this._clientVersion;
+  }
+  getCapabilities() {
+    return this._capabilities;
+  }
+  async ping() {
+    return this.request({ method: "ping" }, EmptyResultSchema);
+  }
+  async createMessage(params, options) {
+    return this.request({ method: "sampling/createMessage", params }, CreateMessageResultSchema, options);
+  }
+  async listRoots(params, options) {
+    return this.request({ method: "roots/list", params }, ListRootsResultSchema, options);
+  }
+  async sendLoggingMessage(params) {
+    return this.notification({ method: "notifications/message", params });
+  }
+  async sendResourceUpdated(params) {
+    return this.notification({
+      method: "notifications/resources/updated",
+      params
+    });
+  }
+  async sendResourceListChanged() {
+    return this.notification({
+      method: "notifications/resources/list_changed"
+    });
+  }
+  async sendToolListChanged() {
+    return this.notification({ method: "notifications/tools/list_changed" });
+  }
+  async sendPromptListChanged() {
+    return this.notification({ method: "notifications/prompts/list_changed" });
+  }
+};
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
+var import_node_process = __toESM(require("node:process"), 1);
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
+var ReadBuffer = class {
+  append(chunk) {
+    this._buffer = this._buffer ? Buffer.concat([this._buffer, chunk]) : chunk;
+  }
+  readMessage() {
+    if (!this._buffer) {
+      return null;
+    }
+    const index = this._buffer.indexOf("\n");
+    if (index === -1) {
+      return null;
+    }
+    const line = this._buffer.toString("utf8", 0, index);
+    this._buffer = this._buffer.subarray(index + 1);
+    return deserializeMessage(line);
+  }
+  clear() {
+    this._buffer = void 0;
+  }
+};
+function deserializeMessage(line) {
+  return JSONRPCMessageSchema.parse(JSON.parse(line));
+}
+function serializeMessage(message) {
+  return JSON.stringify(message) + "\n";
+}
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
+var StdioServerTransport = class {
+  constructor(_stdin = import_node_process.default.stdin, _stdout = import_node_process.default.stdout) {
+    this._stdin = _stdin;
+    this._stdout = _stdout;
+    this._readBuffer = new ReadBuffer();
+    this._started = false;
+    this._ondata = (chunk) => {
+      this._readBuffer.append(chunk);
+      this.processReadBuffer();
+    };
+    this._onerror = (error) => {
+      var _a;
+      (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
+    };
+  }
+  /**
+   * Starts listening for messages on stdin.
+   */
+  async start() {
+    if (this._started) {
+      throw new Error("StdioServerTransport already started! If using Server class, note that connect() calls start() automatically.");
+    }
+    this._started = true;
+    this._stdin.on("data", this._ondata);
+    this._stdin.on("error", this._onerror);
+  }
+  processReadBuffer() {
+    var _a, _b;
+    while (true) {
+      try {
+        const message = this._readBuffer.readMessage();
+        if (message === null) {
+          break;
+        }
+        (_a = this.onmessage) === null || _a === void 0 ? void 0 : _a.call(this, message);
+      } catch (error) {
+        (_b = this.onerror) === null || _b === void 0 ? void 0 : _b.call(this, error);
+      }
+    }
+  }
+  async close() {
+    var _a;
+    this._stdin.off("data", this._ondata);
+    this._stdin.off("error", this._onerror);
+    const remainingDataListeners = this._stdin.listenerCount("data");
+    if (remainingDataListeners === 0) {
+      this._stdin.pause();
+    }
+    this._readBuffer.clear();
+    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
+  }
+  send(message) {
+    return new Promise((resolve) => {
+      const json = serializeMessage(message);
+      if (this._stdout.write(json)) {
+        resolve();
+      } else {
+        this._stdout.once("drain", resolve);
+      }
+    });
+  }
+};
+
+// src/common/version.ts
+var VERSION = "0.1.0";
+
+// src/operations/agentStore.ts
+var AgentStore = class {
+  static registerAgent() {
+    const agentId = `agent${this.agents.length + 1}`;
+    const color = this.colors[this.agents.length % this.colors.length];
+    const newAgent = { id: agentId, color };
+    this.agents.push(newAgent);
+    return newAgent;
+  }
+  static getAgents() {
+    return this.agents;
+  }
+  static clearAgents() {
+    this.agents = [];
+  }
+  static getAgentById(id) {
+    return this.agents.find((agent) => agent.id === id);
+  }
+  static countAgents() {
+    return this.agents.length;
+  }
+};
+__publicField(AgentStore, "agents", []);
+__publicField(AgentStore, "colors", [
+  "red",
+  "green",
+  "blue",
+  "orange",
+  "purple"
+]);
+var agentStore_default = AgentStore;
+
+// src/operations/registerAgent.ts
+function registerAgent() {
+  const agent = agentStore_default.registerAgent();
+  return { agentId: agent.id, color: agent.color };
+}
+
+// src/operations/listAgents.ts
+function listAgents() {
+  return agentStore_default.getAgents();
+}
+
+// src/operations/messageStore.ts
+var MessageStore = class {
+  // Maximum number of messages to store
+  static addMessage(senderId, content) {
+    const message = {
+      id: `msg${this.messages.length + 1}`,
+      senderId,
+      content,
+      timestamp: /* @__PURE__ */ new Date()
+    };
+    this.messages.push(message);
+    if (this.messages.length > this.messageLimit) {
+      this.messages.shift();
+    }
+  }
+  static getRecentMessages(limit = 3) {
+    return this.messages.slice(-limit).reverse();
+  }
+  static clearMessages() {
+    this.messages = [];
+  }
+  static getMessages() {
+    return this.messages;
+  }
+};
+__publicField(MessageStore, "messages", []);
+__publicField(MessageStore, "messageLimit", 100);
+var messageStore_default = MessageStore;
+
+// src/operations/recentMessages.ts
+function recentMessages() {
+  const messages = messageStore_default.getRecentMessages();
+  return { messages };
+}
+function addMessage(senderId, content) {
+  messageStore_default.addMessage(senderId, content);
+}
+
 // src/index.ts
 var addMessageSchema = z.object({
   senderId: z.string().nonempty("Sender ID is required"),
@@ -6560,7 +6679,7 @@ var addMessageSchema = z.object({
 var mcpServer = new Server(
   {
     name: "p1-mcp-server",
-    version: "1.0.0"
+    version: VERSION
   },
   {
     capabilities: {
@@ -6630,4 +6749,13 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
       `Error processing request: ${error instanceof Error ? error.message : "unknown error"}`
     );
   }
+});
+async function runServer() {
+  const transport = new StdioServerTransport();
+  await mcpServer.connect(transport);
+  console.error("GooseTeam MCP Server running on stdio");
+}
+runServer().catch((error) => {
+  console.error("Fatal error in main():", error);
+  process.exit(1);
 });
