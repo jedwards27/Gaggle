@@ -4,9 +4,9 @@
 
 Specifically, our work focuses on creating scalable, modular servers that facilitate agent interaction using [codename goose](https://block.github.io/goose/) and the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
 
+* **Model Context Protocol**  is an open protocol that standardizes how applications provide context to LLMs.
 * **codename goose** is a locally-run, extensible, autonomous agent that can use a wide array of remote or local LLMs.
-* **Model Context Protocol** is a 
-* 
+
 ## Project Structure
 
 The project is currently organized into iterative phases (p0, p1,..). Each phase is a standalone proof-of concept or building block to gradually evolve server capabilities.
