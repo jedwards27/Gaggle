@@ -9,7 +9,7 @@ Specifically, our work focuses on creating scalable, modular servers that facili
 * 
 ## Project Structure
 
-The project is currently organized into iterative phases ([p0](./p0/README.md), p1,..). Each phase is a standalone proof-of concept or building block to gradually evolve server capabilities.
+The project is currently organized into iterative phases (p0, p1,..). Each phase is a standalone proof-of concept or building block to gradually evolve server capabilities.
 
 ### [Phase 0](./p0/README.md)
 
