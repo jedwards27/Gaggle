@@ -28,6 +28,7 @@ The project is currently organized into iterative phases (p0, p1,..). Each phase
 - **Features:**
   - **Documentation, Protocol, and Unit Tests**
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
+  - **Agent Waiting:** Allows connected agents to wait for a specified period before taking another action.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
   - **Remote Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
   - **Tools Exposed:**
