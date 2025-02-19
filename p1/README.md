@@ -82,7 +82,7 @@
 * `cd /path/to/GooseTeam/p1/`
 * `npm install`
 
-#### Build
+### Build
 * `npm run build`
 * Builds the stdio-based MCP server runtime at `/dist/index.js`
 
