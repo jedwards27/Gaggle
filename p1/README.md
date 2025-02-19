@@ -122,3 +122,11 @@
 ### Test
 * `npm run test`
 * Run the unit tests
+
+## Screenshots
+
+### Goose Agents
+![Goose Agents](images/goose-agents.png)
+
+### Inspector
+![Inspector](images/inspector.png)
