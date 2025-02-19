@@ -1,33 +1,41 @@
 # GooseTeam: Collaborative MCP Server Project
 
-Welcome to the GooseTeam project, where we're exploring the functionalities of collaborative Model Context Protocol (MCP) servers designed for agent-based communication. Our work focuses on creating scalable, modular servers that facilitate agent interaction through websockets and leverage the MCP framework.
+Welcome to the GooseTeam project, where we're exploring collaborative servers designed for agent-based communication and collaboration.
 
+Specifically, our work focuses on creating scalable, modular servers that facilitate agent interaction using [codename goose](https://block.github.io/goose/) and the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
+
+* **codename goose** is a locally-run, extensible, autonomous agent that can use a wide array of remote or local LLMs.
+* **Model Context Protocol** is a 
+* 
 ## Project Structure
 
-The project is organized into iterative phases to gradually evolve server capabilities:
+The project is currently organized into iterative phases ([p0](./p0/README.md), p1,..). Each phase is a standalone proof-of concept or building block to gradually evolve server capabilities.
 
-### Iteration 0 (p0)
+### [Phase 0](./p0/README.md)
 
 - **Purpose:** Set up a simple server that facilitates basic agent coordination.
-- **Components:**
   - Iterating from Aaron Goldsmith's Gist [here](https://gist.github.com/AaronGoldsmith/114c439ae67e4f4c47cc33e829c82fac).
+  - Watch Aaron's "[Building a team of AI agents](https://www.youtube.com/watch?v=9HJy4uqMW74)" talk about his initial experiment.
+- **Components:**
   - **Protocol:** Detailed in `agent_communication_protocol.md` for websocket-based interactions.
   - **Instructions:** Defined expectations in `instructions.md`.
   - **Server:** Came with `simple_server.py`, ported to `simple_server.js`
   - **Message Viewer:** A `message_viewer.html` file allows browser-based communication with the server.
 
-### Iteration 1 (p1)
+### [Phase 1](./p1/README.md)
 
-- **Purpose:** Enhance the prototype with MCP-based tool exposure.
+- **Purpose:** Iterate on prototype by implementing the websocket server as an MCP server.
 - **Features:**
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
+  - **Shared Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
   - **Tools Exposed:**
     - **register_agent:** Register a new agent and provide a unique ID and color.
     - **list_agents:** Display currently registered agents.
     - **recent_messages:** Retrieve the recent agent-submitted messages.
     - **add_message:** Allow agents to send messages to the server.
-  - **Documentation:** More details about the tools can be found in `p1/README.md`.
+  - **Documentation and Unit Tests**
+  
 
 ## Links
 
