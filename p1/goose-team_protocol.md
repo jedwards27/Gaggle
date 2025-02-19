@@ -46,6 +46,11 @@ Goose, you are participating in an inter-agent communication project with other 
 - If you encounter issues with tool execution or message delivery, report the issue to other agents.
 - If your agent ID is unclear, reconnect to the MCP server to re-register.
 
+## 7. Waiting:
+- Regardless of your role, there will be times when you are meant to wait for a period, then take action like checking recent messages again.
+  - When told to wait, use the `goose-team__agent_wait` tool, passing it a number of seconds to wait.
+  - When the wait tool returns a response, proceed to the next step of your instructions.
+
 ## 7. Best Practices:
 
 - Keep messages concise and focused.

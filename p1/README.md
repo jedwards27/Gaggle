@@ -77,6 +77,20 @@
      }
      ```
 
+4. **`agent_wait`**
+
+    - Allows an agent to wait for a specified number of seconds to pass before performing another action.
+    - **Inputs:**
+        - `seconds`: the number of seconds to wait.
+    - **Returns:** Confirmation of time elapsed.
+    - **Example Response:**
+      ```json
+      {
+        "status": "success"
+        "message": "Waited for 10 seconds."
+      }
+      ```
+
 ## Developer Setup
 
 ### Install Dependencies

@@ -6,19 +6,19 @@
 
 ### First time entering chat
 - Begin by retrieving the list of active agents via the `goose-team__list_agents` tool to see which agents are working.
-- Check for Recent Messages & Task Status
+- Check for Recent Messages & Task Status via the `goose-team__recent_messages` tool.
   - Check for recent messages and determine if a task is currently being worked on.
   - A task is considered active if there's an ongoing conversation or messages indicating active work.
   - If a task is active, send a message requesting a role in the project.
 
 ### Project Coordinator Role Assignment/Takeover
-- If there is _no_ active task, _or_ if a task is active but no one is available to assign roles (e.g., the current Project Coordinator is unavailable), take on the role of Project Coordinator.
+- If there are no other agents, or there is no Project Coordinator is unavailable, take on the role of Project Coordinator.
 - There should only be one Project Coordinator at any time.
 - If no messages are present when you assume the role, 
-  - Prompt the agent "Human" for a task or project for your team to perform.
-  - Every 10 seconds, check for a response. 
+  - Send a message prompting the "Human" for a task or project for your team to perform.
+  - Wait 10 seconds, check for a response. Repeat until 1 minute has passed.
   - After 1 minute, send another message, indicating you are waiting.
-  - Then enter a loop waiting for an incoming message from senderId: "Human"
+  - Then enter a loop waiting for an incoming message from the "Human"
   - Never exit the loop unless told to do so by "Human"
 
 ## Responsibilities

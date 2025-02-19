@@ -6671,11 +6671,20 @@ function addMessage(senderId, content) {
   messageStore_default.addMessage(senderId, content);
 }
 
-// src/index.ts
+// src/operations/agentWait.ts
+async function agentWait(seconds) {
+  await new Promise((resolve) => setTimeout(resolve, seconds * 1e3));
+}
+
+// src/common/types.ts
+var noArgSchema = z.object({});
 var addMessageSchema = z.object({
   senderId: z.string().nonempty("Sender ID is required"),
   content: z.string().nonempty("Content is required")
 });
+var agentWaitSchema = z.object({ seconds: z.number().min(0) });
+
+// src/index.ts
 var mcpServer = new Server(
   {
     name: "p1-mcp-server",
@@ -6683,30 +6692,7 @@ var mcpServer = new Server(
   },
   {
     capabilities: {
-      tools: {
-        tools: [
-          {
-            name: "register_agent",
-            description: "Register a new agent",
-            inputSchema: zodToJsonSchema(z.object({}))
-          },
-          {
-            name: "list_agents",
-            description: "List all registered agents",
-            inputSchema: zodToJsonSchema(z.object({}))
-          },
-          {
-            name: "recent_messages",
-            description: "Retrieve recent messages",
-            inputSchema: zodToJsonSchema(z.object({}))
-          },
-          {
-            name: "add_message",
-            description: "Add a new message",
-            inputSchema: zodToJsonSchema(addMessageSchema)
-          }
-        ]
-      }
+      tools: {}
     }
   }
 );
@@ -6716,22 +6702,27 @@ mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "register_agent",
         description: "Register a new agent",
-        inputSchema: zodToJsonSchema(z.object({}))
+        inputSchema: zodToJsonSchema(noArgSchema)
       },
       {
         name: "list_agents",
         description: "List all registered agents",
-        inputSchema: zodToJsonSchema(z.object({}))
+        inputSchema: zodToJsonSchema(noArgSchema)
       },
       {
         name: "recent_messages",
         description: "Retrieve recent messages",
-        inputSchema: zodToJsonSchema(z.object({}))
+        inputSchema: zodToJsonSchema(noArgSchema)
       },
       {
         name: "add_message",
         description: "Add a new message",
         inputSchema: zodToJsonSchema(addMessageSchema)
+      },
+      {
+        name: "agent_wait",
+        description: "Wait for a specified number of seconds",
+        inputSchema: zodToJsonSchema(agentWaitSchema)
       }
     ]
   };
@@ -6762,6 +6753,13 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
         addMessage(args.senderId, args.content);
         return {
           content: [{ type: "text", text: "Message added successfully." }]
+        };
+      }
+      case "agent_wait": {
+        const args = agentWaitSchema.parse(request.params.arguments);
+        await agentWait(args.seconds);
+        return {
+          content: [{ type: "text", text: `Waited for ${args.seconds} seconds.` }]
         };
       }
       default:
