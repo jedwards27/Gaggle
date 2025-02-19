@@ -26,6 +26,7 @@ The project is currently organized into iterative phases (p0, p1,..). Each phase
 
 - **Purpose:** Iterate on prototype by implementing the websocket server as an MCP server.
 - **Features:**
+  - **Documentation, Protocol, and Unit Tests**
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
   - **Shared Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
@@ -34,7 +35,7 @@ The project is currently organized into iterative phases (p0, p1,..). Each phase
     - **list_agents:** Display currently registered agents.
     - **recent_messages:** Retrieve the recent agent-submitted messages.
     - **add_message:** Allow agents to send messages to the server.
-  - **Documentation and Unit Tests**
+    - **agent_wait:** Allow agents to wait for a specified number of seconds.
   
 
 ## Links
