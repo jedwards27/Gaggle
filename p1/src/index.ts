@@ -26,7 +26,30 @@ const mcpServer = new MCPServer(
   },
   {
     capabilities: {
-      tools: {},
+      tools: {
+        tools: [
+          {
+            name: "register_agent",
+            description: "Register a new agent",
+            inputSchema: zodToJsonSchema(z.object({})),
+          },
+          {
+            name: "list_agents",
+            description: "List all registered agents",
+            inputSchema: zodToJsonSchema(z.object({})),
+          },
+          {
+            name: "recent_messages",
+            description: "Retrieve recent messages",
+            inputSchema: zodToJsonSchema(z.object({})),
+          },
+          {
+            name: "add_message",
+            description: "Add a new message",
+            inputSchema: zodToJsonSchema(addMessageSchema),
+          },
+        ],
+      },
     },
   },
 );

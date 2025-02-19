@@ -6588,7 +6588,7 @@ var StdioServerTransport = class {
 };
 
 // src/common/version.ts
-var VERSION = "0.1.0";
+var VERSION = "0.2.0";
 
 // src/operations/agentStore.ts
 var AgentStore = class {
@@ -6683,7 +6683,30 @@ var mcpServer = new Server(
   },
   {
     capabilities: {
-      tools: {}
+      tools: {
+        tools: [
+          {
+            name: "register_agent",
+            description: "Register a new agent",
+            inputSchema: zodToJsonSchema(z.object({}))
+          },
+          {
+            name: "list_agents",
+            description: "List all registered agents",
+            inputSchema: zodToJsonSchema(z.object({}))
+          },
+          {
+            name: "recent_messages",
+            description: "Retrieve recent messages",
+            inputSchema: zodToJsonSchema(z.object({}))
+          },
+          {
+            name: "add_message",
+            description: "Add a new message",
+            inputSchema: zodToJsonSchema(addMessageSchema)
+          }
+        ]
+      }
     }
   }
 );

@@ -84,11 +84,24 @@
 
 #### Build
 * `npm run build`
-* Creates server runtime at `/dist/index.js`
+* Builds the stdio-based MCP server runtime at `/dist/index.js`
+
+### MCP Proxy
+* `npm run mcp-proxy`
+* Launches an SSE-based/MCP proxy on port `:8080` with endpoint `/sse`
+* This has a single instance of the MCP server which multiple clients can connect to via SSE
+* **MUST BE LAUNCHED BEFORE RUNNING INSPECTOR**
 
 ### Inspector
 * `npm run inspector`
-* Runs the [Model Context Protocol Inspector](https://modelcontextprotocol.io/docs/tools/inspector), pointing to the server runtime at `/dist/index.js`
+* Runs the [Model Context Protocol Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
+* The Inspector UI will be available at: http://localhost:8080
+* In the Inspector UI:
+  * Make sure `Transport Type` is set to `SSE`
+  * Make sure `URL` is set to http://localhost:8080/sse
+  * Click its **"Connect"** button to connect to the MCP Proxy
+    * You should see Green light 🟢and **"Connected"** message.
+  * Click its **List Tools** button
 
 ### Format
 * `npm run format`

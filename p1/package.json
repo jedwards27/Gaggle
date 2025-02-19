@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "build": "node esbuild.config.cjs",
-    "inspector": "npx @modelcontextprotocol/inspector node dist/index.cjs",
+    "mcp-proxy": "npx mcp-proxy --port 8080 --endpoint /sse node dist/index.cjs",
+    "inspector": "npx @modelcontextprotocol/inspector",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit -p tsconfig.json --composite false",
     "lint": "eslint .",
@@ -40,6 +41,7 @@
     "@types/express": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
+    "mcp-proxy": "^2.4.0",
     "node-fetch": "^2.7.0"
   }
 }
