@@ -1,4 +1,5 @@
-# P0 - Initial Prototype 
+# Phase 0
+## Initial Websocket-based Protocol
 
 * Originally created and demonstrated by [Aaron Goldsmith](https://gist.github.com/AaronGoldsmith)
 * This [GitHub Gist](https://gist.github.com/AaronGoldsmith/114c439ae67e4f4c47cc33e829c82fac) contains Aaron's initial files 

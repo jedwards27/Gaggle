@@ -1,4 +1,5 @@
-# Agent Communication MCP Server - p1
+# Phase 1
+## GooseTeam MCP-based Protocol
 
 - This server iteration builds upon the initial prototype in `../p0`, as a pure stdio MCP Server implementation.
 - Human interaction via the [Model Context Protocol Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
