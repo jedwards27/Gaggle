@@ -1,6 +1,6 @@
 # GooseTeam: Collaborative MCP Server Project
 
-Welcome to the GooseTeam project, where we're exploring collaborative servers designed for agent-based communication and collaboration.
+## Welcome to the GooseTeam project, where we're exploring collaborative servers designed for agent-based communication and collaboration.
 
 Specifically, our work focuses on creating scalable, modular servers that facilitate agent interaction using [codename goose](https://block.github.io/goose/) and the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
 
