@@ -24,7 +24,7 @@ The project is currently organized into iterative phases (p0, p1,..). Each phase
 
 ### [Phase 1](./p1/README.md)
 
-- **Purpose:** Iterate on prototype by implementing the websocket server as an MCP server.
+- **Purpose:** Iterate on prototype by reimplementing the websocket server as an MCP server.
 - **Features:**
   - **Documentation, Protocol, and Unit Tests**
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
