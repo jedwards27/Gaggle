@@ -11,7 +11,7 @@ Specifically, our work focuses on creating scalable, modular servers that facili
 
 The project is currently organized into iterative phases (p0, p1,..). Each phase is a standalone proof-of concept or building block to gradually evolve server capabilities.
 
-### [Phase 0](./p0/README.md)
+### [Phase 0](./p0/README.md) Inspiration
 
 - **Purpose:** Set up a simple server that facilitates basic agent coordination.
   - Iterating from Aaron Goldsmith's Gist [here](https://gist.github.com/AaronGoldsmith/114c439ae67e4f4c47cc33e829c82fac).
@@ -22,7 +22,7 @@ The project is currently organized into iterative phases (p0, p1,..). Each phase
   - **Server:** Came with `simple_server.py`, ported to `simple_server.js`
   - **Message Viewer:** A `message_viewer.html` file allows browser-based communication with the server.
 
-### [Phase 1](./p1/README.md)
+### [Phase 1](./p1/README.md) Working MCP Server for Collaborative Agents
 
 - **Purpose:** Iterate on prototype by reimplementing the websocket server as an MCP server.
 - **Features:**
