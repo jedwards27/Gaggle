@@ -29,7 +29,7 @@ The project is currently organized into iterative phases (p0, p1,..). Each phase
   - **Documentation, Protocol, and Unit Tests**
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
-  - **Shared Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
+  - **Remote Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
   - **Tools Exposed:**
     - **register_agent:** Register a new agent and provide a unique ID and color.
     - **list_agents:** Display currently registered agents.
