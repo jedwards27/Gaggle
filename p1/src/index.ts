@@ -2,23 +2,44 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { Server as MCPServer } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import { VERSION } from "./common/version.js";
-import { registerAgent } from "./operations/registerAgent.ts";
-import { listAgents } from "./operations/listAgents.ts";
-import { recentMessages, addMessage } from "./operations/recentMessages.ts";
-import { agentWait } from "./operations/agentWait.ts";
-import {addMessageSchema, agentWaitSchema, noArgSchema} from "./common/types.js"
+import {
+  noArgSchema,
+  addTaskSchema,
+  agentWaitSchema,
+  agentLeaveSchema,
+  assignTaskSchema,
+  addMessageSchema,
+  completeTaskSchema,
+} from "./schemas.ts";
 
+import { VERSION } from "./common/version.ts";
+import {
+  registerAgent,
+  listAgents,
+  agentWait,
+  agentLeave,
+} from "./operations/agents.ts";
+import {
+  recentMessages,
+  addMessage,
+  listMessages,
+  clearMessages,
+} from "./operations/messages.ts";
+import {
+  addTask,
+  listTasks,
+  assignTask,
+  completeTask,
+} from "./operations/tasks.ts";
 
 // Instantiate the MCP server
 const mcpServer = new MCPServer(
   {
-    name: "p1-mcp-server",
+    name: "goose-team",
     version: VERSION,
   },
   {
@@ -43,9 +64,14 @@ mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: zodToJsonSchema(noArgSchema),
       },
       {
-        name: "recent_messages",
-        description: "Retrieve recent messages",
-        inputSchema: zodToJsonSchema(noArgSchema),
+        name: "agent_leave",
+        description: "Allow an agent to leave the team",
+        inputSchema: zodToJsonSchema(agentLeaveSchema),
+      },
+      {
+        name: "agent_wait",
+        description: "Wait for a specified number of seconds",
+        inputSchema: zodToJsonSchema(agentWaitSchema),
       },
       {
         name: "add_message",
@@ -53,9 +79,39 @@ mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: zodToJsonSchema(addMessageSchema),
       },
       {
-        name: "agent_wait",
-        description: "Wait for a specified number of seconds",
-        inputSchema: zodToJsonSchema(agentWaitSchema),
+        name: "recent_messages",
+        description: "Retrieve recent messages",
+        inputSchema: zodToJsonSchema(noArgSchema),
+      },
+      {
+        name: "list_messages",
+        description: "Retrieve all messages",
+        inputSchema: zodToJsonSchema(noArgSchema),
+      },
+      {
+        name: "clear_messages",
+        description: "Clear all messages",
+        inputSchema: zodToJsonSchema(noArgSchema),
+      },
+      {
+        name: "add_task",
+        description: "Add a new task",
+        inputSchema: zodToJsonSchema(addTaskSchema),
+      },
+      {
+        name: "assign_task",
+        description: "Assign a task to an agent",
+        inputSchema: zodToJsonSchema(assignTaskSchema),
+      },
+      {
+        name: "list_tasks",
+        description: "List all tasks",
+        inputSchema: zodToJsonSchema(noArgSchema),
+      },
+      {
+        name: "complete_task",
+        description: "Complete a task",
+        inputSchema: zodToJsonSchema(completeTaskSchema),
       },
     ],
   };
@@ -76,24 +132,84 @@ mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         };
       }
-      case "recent_messages": {
-        const result = recentMessages();
+      case "agent_leave": {
+        const args = agentLeaveSchema.parse(request.params.arguments);
+        agentLeave(args.id);
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-        };
-      }
-      case "add_message": {
-        const args = addMessageSchema.parse(request.params.arguments);
-        addMessage(args.senderId, args.content);
-        return {
-          content: [{ type: "text", text: "Message added successfully." }],
+          content: [{ type: "text", text: `Agent ${args.id} has left.` }],
         };
       }
       case "agent_wait": {
         const args = agentWaitSchema.parse(request.params.arguments);
         await agentWait(args.seconds);
         return {
-          content: [{ type: "text", text: `Waited for ${args.seconds} seconds.` }],
+          content: [
+            { type: "text", text: `Waited for ${args.seconds} seconds.` },
+          ],
+        };
+      }
+      case "add_message": {
+        const args = addMessageSchema.parse(request.params.arguments);
+        const messageId = addMessage(args.senderId, args.content);
+        return {
+          content: [
+            { type: "text", text: `Message ${messageId} added successfully.` },
+          ],
+        };
+      }
+      case "recent_messages": {
+        const result = recentMessages();
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      }
+      case "list_messages": {
+        const result = listMessages();
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        };
+      }
+      case "clear_messages": {
+        clearMessages();
+        return {
+          content: [
+            { type: "text", text: `Message queue successfully cleared.` },
+          ],
+        };
+      }
+      case "add_task": {
+        const args = addTaskSchema.parse(request.params.arguments);
+        const { id } = addTask(args.description);
+        return {
+          content: [{ type: "text", text: `Task ${id} added successfully.` }],
+        };
+      }
+      case "assign_task": {
+        const args = assignTaskSchema.parse(request.params.arguments);
+        assignTask({ ...args });
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Task ${args.taskId} assigned successfully to Agent ${args.agentId}.`,
+            },
+          ],
+        };
+      }
+      case "list_tasks": {
+        const allTasks = listTasks();
+        return {
+          content: [{ type: "text", text: JSON.stringify(allTasks, null, 2) }],
+        };
+      }
+      case "complete_task": {
+        const args = completeTaskSchema.parse(request.params.arguments);
+        const taskId = args.taskId;
+        completeTask(taskId);
+        return {
+          content: [
+            { type: "text", text: `Task ${taskId} completed successfully.` },
+          ],
         };
       }
       default:

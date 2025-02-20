@@ -1,7 +1,6 @@
 {
   "name": "goose-team",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.3.0",
   "scripts": {
     "build": "node esbuild.config.cjs",
     "mcp-proxy": "npx mcp-proxy --port 8080 --endpoint /sse node dist/index.cjs",

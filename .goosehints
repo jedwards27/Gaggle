@@ -1,17 +1,14 @@
 # GooseTeam
-We are working iteratively on a way for multiple goose sessions to collaborate using Model Context Protocol (MCP)
+We are working on a way for multiple codename goose sessions to collaborate using Model Context Protocol (MCP)
 
-## Proof of Concept iteration 0
-Just a simple server and a protocol for interacting with it defined in markdown
-In folder ./p0
-- A server for agents to coordinate - originally p0/simple_server.py, we ported to p0/simple_server.js
-- The protocol for communicating with the simple agent server using websockets is located in p0/agent_communication_protocol.md
-- The expected rules for interacting with the agent server are in p0/instructions.md
-- A message_viewer.html file for humans to communicate with the server via browser
+## Status
+### Working on Phase 1 by expanding the MCP toolset available to GooseTeam agents for collaboration.
 
-## Proof of Concept iteration 1
+## Phase 1 (Working MCP Server and Protocol for Collaborative Agents)
 In folder ./p1
-- A typescript project with the usual package.json, tsconfig.json, .prettierrc, etc.
+- An MCP server and protocol for collaboration
+- Each MCP tool is implemented in the p1/src/operations folder and tested in p1/src/operations/__tests__
+- A typescript project with the all the usual package.json, tsconfig.json, etc.
 - The src folder will contain the code for the server, with routes modularized to keep the server itself simple
 
 # MCP Specification
@@ -21,3 +18,8 @@ with the typescript spec defined here: /Users/cliffhall/Projects/mcp-specificati
 # Implementation Reference
 Here is an MCP server implementation you can refer to for style. It is for communication with GitHub.
 We will take a similar modular approach: /Users/cliffhall/Projects/mcp-servers/src/github
+
+## Phase 0 (Inspiration)
+In folder ./p0
+- Just a simple server and a protocol for interacting with it defined in markdown that proved it could work.
+

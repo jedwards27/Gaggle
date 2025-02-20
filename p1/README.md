@@ -1,4 +1,5 @@
 # Phase 1
+
 ## GooseTeam MCP-based Protocol
 
 - This server iteration builds upon the initial prototype in `../p0`, as a pure stdio MCP Server implementation.
@@ -8,89 +9,69 @@
 
 ## MCP Tools
 
-1. **`register_agent`**
+### Agents
 
-   - Registers a new agent and provides a unique ID and a randomly assigned color.
-   - **Inputs:** None
-   - **Returns:** JSON with `agentId` and assigned `color`.
-   - **Example Response:**
-     ```json
-     {
-       "agentId": "agent1",
-       "color": "red"
-     }
-     ```
+- **`register_agent`**
 
-2. **`list_agents`**
+  - Registers a new agent and provides a unique ID and a randomly assigned color.
+  - **Inputs:** None
+  - **Returns:** JSON agent with unique `id` and assigned `color`.
 
-   - Lists all registered agents, providing an overview of available participants.
-   - **Inputs:** None
-   - **Returns:** JSON list of agents with their IDs and colors.
-   - **Example Response:**
-     ```json
-     [
-       {
-         "agentId": "agent1",
-         "color": "red"
-       },
-       {
-         "agentId": "agent2",
-         "color": "green"
-       }
-     ]
-     ```
+- **`list_agents`**
 
-3. **`recent_messages`**
+  - Lists all registered agents, providing an overview of available participants.
+  - **Inputs:** None
+  - **Returns:** JSON list of all agents connected to the server.
 
-   - Retrieves the most recent messages stored on the server.
-   - **Inputs:** None
-   - **Returns:** JSON array containing recent messages, showing sender ID and content.
-   - **Example Response:**
-     ```json
-     [
-       {
-         "id": "msg1",
-         "senderId": "agent1",
-         "content": "Hello, World!",
-         "timestamp": "2025-02-16T12:34:56.789Z"
-       },
-       {
-         "id": "msg2",
-         "senderId": "agent2",
-         "content": "Goodbye!",
-         "timestamp": "2025-02-16T12:35:56.789Z"
-       }
-     ]
-     ```
+- **`agent_leave`**
 
-4. **`add_message`**
+  - Allows an agent to leave the team.
+  - **Inputs:** None.
+  - **Returns:** JSON of the agent that left.
 
-   - Allows an agent to send a new message, storing it within the server.
-   - **Inputs:**
-     - `senderId`: ID of the agent sending the message.
-     - `content`: Content of the message.
-   - **Returns:** Confirmation of message addition.
-   - **Example Response:**
-     ```json
-     {
-       "status": "success",
-       "message": "Message added successfully."
-     }
-     ```
+- **`agent_wait`**
 
-4. **`agent_wait`**
+  - Allows an agent to wait for a specified number of seconds to pass before performing another action.
+  - **Inputs:**
+    - `seconds`: the number of seconds to wait.
+  - **Returns:** Confirmation of time elapsed.
 
-    - Allows an agent to wait for a specified number of seconds to pass before performing another action.
-    - **Inputs:**
-        - `seconds`: the number of seconds to wait.
-    - **Returns:** Confirmation of time elapsed.
-    - **Example Response:**
-      ```json
-      {
-        "status": "success"
-        "message": "Waited for 10 seconds."
-      }
-      ```
+### Messages
+
+- **`add_message`**
+
+  - Allows an agent to send a new message, storing it within the server.
+  - **Inputs:**
+    - `senderId`: ID of the agent sending the message.
+    - `content`: Content of the message.
+  - **Returns:** Confirmation of message addition.
+
+- **`recent_messages`**
+
+  - Retrieves the most recent messages stored on the server.
+  - **Inputs:** None
+  - **Returns:** JSON array containing the three most recent messages.
+
+- **`list_messages`**
+
+  - Retrieves all messages stored on the server.
+  - **Inputs:** None
+  - **Returns:** JSON array containing all messages in the server.
+
+- **`clear_messages`**
+
+  - Clears all messages stored on the server.
+  - **Inputs:** None
+  - **Returns:** Confirmation of messages cleared.
+
+### Tasks
+
+- **`add_task`**
+
+  - Add a task to the server.
+  - **Inputs:**
+    - `description`: Description of the task.
+  - **Returns:** The newly added task, with it's assigned id.
 
 ## Developer Setup
 
@@ -130,7 +111,7 @@
 - First agent will assume Project Coordinator Role
 - NOTE: It's best to connect to the server with the Inspector BEFORE launching the first agent
   - Send a message from "Human" telling it what you'd like the team to accomplish
-  
+
 ### Format
 
 - `npm run format`
@@ -165,3 +146,24 @@
 ### Inspector
 
 ![Inspector](images/inspector.png)
+
+{
+name: "add_task",
+description: "Add a new task",
+inputSchema: zodToJsonSchema(addTaskSchema),
+},
+{
+name: "assign_task",
+description: "Assign a task to an agent",
+inputSchema: zodToJsonSchema(assignTaskSchema),
+},
+{
+name: "list_tasks",
+description: "List all tasks",
+inputSchema: zodToJsonSchema(noArgSchema),
+},
+{
+name: "complete_task",
+description: "Complete a task",
+inputSchema: zodToJsonSchema(completeTaskSchema),
+},
