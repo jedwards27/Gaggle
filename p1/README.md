@@ -73,6 +73,27 @@
     - `description`: Description of the task.
   - **Returns:** The newly added task, with it's assigned id.
 
+- **`list_tasks`**
+
+  - Lists all tasks in the server.
+  - **Inputs:** None
+  - **Returns:** JSON list of all tasks in the server.
+
+- **`assign_task`**
+
+  - Assign a task to an agent.
+  - **Inputs:**
+    - `taskId`: ID of the task.
+    - `agentId`: ID of the agent to assign the task to.
+  - **Returns:** Confirmation of message addition.
+
+- **`complete_task`**
+
+  - Complete a task.
+  - **Inputs:**
+    - `taskId`: ID of the task.
+  - **Returns:** Confirmation of task completion.
+  
 ## Developer Setup
 
 ### Install Dependencies
@@ -148,19 +169,9 @@
 ![Inspector](images/inspector.png)
 
 {
-name: "add_task",
-description: "Add a new task",
-inputSchema: zodToJsonSchema(addTaskSchema),
-},
-{
 name: "assign_task",
 description: "Assign a task to an agent",
 inputSchema: zodToJsonSchema(assignTaskSchema),
-},
-{
-name: "list_tasks",
-description: "List all tasks",
-inputSchema: zodToJsonSchema(noArgSchema),
 },
 {
 name: "complete_task",
