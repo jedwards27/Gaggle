@@ -2,10 +2,20 @@
 We are working on a way for multiple goose sessions to collaborate using Model Context Protocol (MCP).
 
 ## Status
-* Working, unit-tested MCP server in src/ folder, built with Typescript
-* Currently expanding the MCP toolset available to GooseTeam agents for collaboration.
-* Task tools have been added, but the protocol does not yet direct agents in their use.
+* Currently testing Goose Agent collaboration with a small software library porting project.
 
-# MCP Specification
-The full Model Context Protocol specification is in /Users/cliffhall/Projects/mcp-specification
-with the typescript spec defined here: /Users/cliffhall/Projects/mcp-specification/schema/2024-11-05/schema.ts
+## The Project
+### Goal
+* We are porting the PureMVC State Machine Utility for ActionScript 3 to TypeScript
+    - TypeScript and ActionScript are very similar, and so the port should be straightforward.
+    - We will be using the TypeScript port of PureMVC (npm i @puremvc/puremvc-typescript-multicore-framework)
+    - We are only interested in porting the multi-core version.
+    - ONE DIFFERENCE:
+        - There is a tool in the AS3 version called FSMInjector, which allows easy definition of state machines in XML.
+        - We want that to use JSON for the TypeScript version, with zod schema validation.
+
+### Folders
+* For local reference, in the folder ~/Projects/ you will find
+    - puremvc-as3-util-statemachine (the code we are porting - read only)
+    - puremvc-typescript-util-statemachine (the folder for the ported version - write here)
+    - puremvc-typescript-multicore-framework (the PureMVC MultiCore Framework for TypeScript - read only)
