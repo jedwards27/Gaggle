@@ -112,7 +112,7 @@
 
 ### Install Dependencies
 
-- `cd /path/to/GooseTeam/p1/`
+- `cd /path/to/GooseTeam/`
 - `npm install`
 
 ### Build
