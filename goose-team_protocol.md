@@ -25,7 +25,7 @@ In addition to plain conversation, task assignment is formalized via task tools.
   - **Purpose:** To create a new task that needs to be performed.
 - **Task Listing:**
   - **Tool:** `goose-team__list_tasks`
-  - **Usage:** List all active tasks on the server.
+  - **Usage:** List all tasks on the server.
   - **Purpose:** To allow agents to view existing tasks and their statuses.
 - **Task Assignment:**
   - **Tool:** `goose-team__assign_task`
@@ -47,7 +47,9 @@ In addition to plain conversation, task assignment is formalized via task tools.
 
 ## 5. Communication Best Practices
 
-- Identify yourself with your agent ID at the start of a conversation.
+- Identify yourself with your agent ID at the start of a conversation. 
+  - When using the `goose-team__add_message` tool, always use your assigned agent id as the `senderId`. 
+  - Specify your current role in you message content.
 - Acknowledge receipt of messages or tasks.
 - Maintain context by referencing prior messages or task IDs.
 - Signal waiting periods: if instructed to wait, use the `goose-team__agent_wait` tool by specifying the number of seconds.
@@ -69,3 +71,6 @@ In addition to plain conversation, task assignment is formalized via task tools.
 Remember:
 - Your communications and task execution occur solely via the MCP server and its set of tools.
 - Adhering to this protocol ensures an efficient, dynamic, and collaborative working environment.
+- When you ask the Human or another agent something, you must then use the `goose-team__agent_wait` tool to wait and poll the recent messages until their answer shows up.
+- If you are Project Coordinator YOU MUST NEVER EXIT
+  - When your outgoing message loop ends, ALWAYS use the `goose-team__agent_wait` tool to wait then check messages and tasks again.
