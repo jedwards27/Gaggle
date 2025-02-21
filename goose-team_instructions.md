@@ -2,43 +2,68 @@
 
 ## Onboarding
 
-- Read the agent communications protocol defined in `goose-team_protocol.md`
+- Read the agent communications protocol defined in `goose-team_protocol.md`.
 
-### First time entering chat
+### First Time Entering Chat
 
-- Begin by retrieving the list of active agents via the `goose-team__list_agents` tool to see which agents are working.
-- Check for Recent Messages & Task Status via the `goose-team__recent_messages` tool.
-  - Determine if any other agents are communicating with you.
-- Check for
-  - A task is considered active if there's an ongoing conversation or messages indicating active work.
-  - If a task is active, send a message requesting a role in the project.
+- Begin by retrieving the list of active agents via the `goose-team__list_agents` tool.
+- Check recent messages and task statuses via the `goose-team__recent_messages` tool.
+  - Determine if any agents are actively communicating or have tasks assigned.
+- If a task is already underway, ensure your role is aligned by clarifying your assignment.
 
 ### Project Coordinator Role Assignment/Takeover
 
-- If there are no other agents, or there is no Project Coordinator is unavailable, take on the role of Project Coordinator.
-- There should only be one Project Coordinator at any time.
-- If no messages are present when you assume the role,
-  - Send a message prompting the "Human" for a task or project for your team to perform.
-  - Wait 10 seconds, check for a response. Repeat until 1 minute has passed.
-  - After 1 minute, send another message, indicating you are waiting.
-  - Then enter a loop waiting for an incoming message from the "Human"
-  - Never exit the loop unless told to do so by "Human"
+- If there are no other agents or there is no active Project Coordinator, assume the role of Project Coordinator.
+- Always confirm that only one Project Coordinator exists.
+- If no messages are initially received upon assuming the role:
+  - Prompt the "Human" for a task or project for your team.
+  - Wait 10 seconds using the `goose-team__agent_wait` tool, and check for responses (repeat as needed up to one minute).
+  - After one minute, send another message indicating you are still waiting.
+  - Enter a silent loop to wait for incoming messages from the "Human." 
+- **Note:** The Project Coordinator must never exit the process; ongoing monitoring and task management are required.
 
 ## Responsibilities
 
 ### For the Project Coordinator
 
-- If a new agent joins and a task is active, assign them a role or subtask.
-- If an agent completes their assigned role/subtask and has nothing further to do, assign them a new role/subtask related to the overall project.
-- If no task is active, but more work is already planned, initiate a new task and assign roles as needed.
-- **The Project Coordinator should _never_ exit the process.** They continue to monitor for new agents and manage tasks indefinitely.
+- Monitor for new agents and existing task statuses.
+- For incoming agents:
+  - If a task is active, assign them a role or a subtask.
+- **Task Management:**
+  - Create tasks using the `goose-team__add_task` tool with a clear description of the work to be done.
+  - Assign tasks to agents using the `goose-team__assign_task` tool.
+  - When additional or more granular steps are needed, break down larger tasks into subtasks.
+  - Only assign tasks that have no dependency on previous tasks being completed.
+  - Continuously monitor task statuses with the `goose-team__list_tasks` tool.
+- If an agent completes their assigned task and no further work is pending, provide new tasks or subtasks if available.
+- The Project Coordinator should always be available to answer queries and manage task transitions.
 
-### For Agents other than the Project Coordinator
+### For Agents (Non-Project Coordinators)
 
-- **Respond to New Message:** If a new message arrives from a different agent, respond to it, to continue the conversation related to your assigned role/subtask. Avoid interrupting other agents unnecessarily. Coordination of tasks may be required when communicating with 2 or more agents.
-- **If No New Message - First Check:** If no new message is found, wait 10 seconds. Then, check for new messages again.
-- **If No New Message - Second Check:** If still no new message is found, wait 5 seconds. Then, check for new messages again and send the message "I'm still here waiting."
-- **Extended Waiting Period:** If there are still no messages, wait in 10-second increments, checking for new messages after each increment but not sending any messages. Do this for a total of 10 minutes.
-- **Exit Condition:** If no new messages are received within the extended waiting period, send a message saying you're clocking out and exit the process.
+- Always monitor both messages and task assignments.
+- **When a Task is Assigned:**
+  - Acknowledge the assignment.
+  - Execute the task as described.
+  - For complex or multi-step tasks:
+    - If needed, break down the task by creating subtasks using the `goose-team__add_task` tool.
+    - Self-assign subtasks using the `goose-team__assign_task` tool.
+- **Upon Task Completion:**
+  - Mark the task complete using the `goose-team__complete_task` tool.
+  - Inform the Project Coordinator that you’re ready for additional tasks.
+- **When No New Messages or Tasks are Found:**
+  - Wait for 10 seconds using the `goose-team__agent_wait` tool, then re-check messages.
+  - If still idle, wait an additional 5 seconds and send a polite message indicating, "I'm still here waiting."
+  - Continue in 10-second increments for up to 10 minutes.
+  - If no activity is detected after 10 minutes, send a final message stating you are clocking out and then exit.
 
-Remember, the Project Coordinator should run indefinitely, continuing to monitor for new requests.
+## General Guidelines
+
+- In addition to regular message passing, use the task tools to formally communicate work assignments.
+- Task tools to be used include:
+  - `goose-team__add_task`
+  - `goose-team__list_tasks`
+  - `goose-team__assign_task`
+  - `goose-team__complete_task`
+- Maintain concise communication using Markdown for clarity.
+- Structured data (i.e., JSON) should be used for tasks if details need to be shared.
+- Keep conversation context and file paths updated as you work.

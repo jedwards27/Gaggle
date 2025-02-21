@@ -5,7 +5,6 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -22,10 +21,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __publicField = (obj, key, value) => {
-  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
-  return value;
-};
 
 // node_modules/zod/lib/index.mjs
 var util;
@@ -181,7 +176,7 @@ var quotelessJson = (obj) => {
   const json = JSON.stringify(obj, null, 2);
   return json.replace(/"([^"]+)":/g, "$1:");
 };
-var ZodError = class extends Error {
+var ZodError = class _ZodError extends Error {
   get errors() {
     return this.issues;
   }
@@ -240,7 +235,7 @@ var ZodError = class extends Error {
     return fieldErrors;
   }
   static assert(value) {
-    if (!(value instanceof ZodError)) {
+    if (!(value instanceof _ZodError)) {
       throw new Error(`Not a ZodError: ${value}`);
     }
   }
@@ -424,7 +419,7 @@ function addIssueToContext(ctx, issueData) {
   });
   ctx.common.issues.push(issue);
 }
-var ParseStatus = class {
+var ParseStatus = class _ParseStatus {
   constructor() {
     this.value = "valid";
   }
@@ -457,7 +452,7 @@ var ParseStatus = class {
         value
       });
     }
-    return ParseStatus.mergeObjectSync(status, syncPairs);
+    return _ParseStatus.mergeObjectSync(status, syncPairs);
   }
   static mergeObjectSync(status, pairs) {
     const finalObject = {};
@@ -488,19 +483,14 @@ var isDirty = (x) => x.status === "dirty";
 var isValid = (x) => x.status === "valid";
 var isAsync = (x) => typeof Promise !== "undefined" && x instanceof Promise;
 function __classPrivateFieldGet(receiver, state, kind, f) {
-  if (kind === "a" && !f)
-    throw new TypeError("Private accessor was defined without a getter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver))
-    throw new TypeError("Cannot read private member from an object whose class did not declare it");
+  if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
   return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 }
 function __classPrivateFieldSet(receiver, state, value, kind, f) {
-  if (kind === "m")
-    throw new TypeError("Private method is not writable");
-  if (kind === "a" && !f)
-    throw new TypeError("Private accessor was defined without a setter");
-  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver))
-    throw new TypeError("Cannot write private member to an object whose class did not declare it");
+  if (kind === "m") throw new TypeError("Private method is not writable");
+  if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+  if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
   return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
 }
 var errorUtil;
@@ -932,7 +922,7 @@ function isValidCidr(ip, version) {
   }
   return false;
 }
-var ZodString = class extends ZodType {
+var ZodString = class _ZodString extends ZodType {
   _parse(input) {
     if (this._def.coerce) {
       input.data = String(input.data);
@@ -1242,7 +1232,7 @@ var ZodString = class extends ZodType {
     });
   }
   _addCheck(check) {
-    return new ZodString({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, check]
     });
@@ -1385,19 +1375,19 @@ var ZodString = class extends ZodType {
     return this.min(1, errorUtil.errToObj(message));
   }
   trim() {
-    return new ZodString({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, { kind: "trim" }]
     });
   }
   toLowerCase() {
-    return new ZodString({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, { kind: "toLowerCase" }]
     });
   }
   toUpperCase() {
-    return new ZodString({
+    return new _ZodString({
       ...this._def,
       checks: [...this._def.checks, { kind: "toUpperCase" }]
     });
@@ -1488,7 +1478,7 @@ function floatSafeRemainder(val, step) {
   const stepInt = parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / Math.pow(10, decCount);
 }
-var ZodNumber = class extends ZodType {
+var ZodNumber = class _ZodNumber extends ZodType {
   constructor() {
     super(...arguments);
     this.min = this.gte;
@@ -1589,7 +1579,7 @@ var ZodNumber = class extends ZodType {
     return this.setLimit("max", value, false, errorUtil.toString(message));
   }
   setLimit(kind, value, inclusive, message) {
-    return new ZodNumber({
+    return new _ZodNumber({
       ...this._def,
       checks: [
         ...this._def.checks,
@@ -1603,7 +1593,7 @@ var ZodNumber = class extends ZodType {
     });
   }
   _addCheck(check) {
-    return new ZodNumber({
+    return new _ZodNumber({
       ...this._def,
       checks: [...this._def.checks, check]
     });
@@ -1719,7 +1709,7 @@ ZodNumber.create = (params) => {
     ...processCreateParams(params)
   });
 };
-var ZodBigInt = class extends ZodType {
+var ZodBigInt = class _ZodBigInt extends ZodType {
   constructor() {
     super(...arguments);
     this.min = this.gte;
@@ -1804,7 +1794,7 @@ var ZodBigInt = class extends ZodType {
     return this.setLimit("max", value, false, errorUtil.toString(message));
   }
   setLimit(kind, value, inclusive, message) {
-    return new ZodBigInt({
+    return new _ZodBigInt({
       ...this._def,
       checks: [
         ...this._def.checks,
@@ -1818,7 +1808,7 @@ var ZodBigInt = class extends ZodType {
     });
   }
   _addCheck(check) {
-    return new ZodBigInt({
+    return new _ZodBigInt({
       ...this._def,
       checks: [...this._def.checks, check]
     });
@@ -1917,7 +1907,7 @@ ZodBoolean.create = (params) => {
     ...processCreateParams(params)
   });
 };
-var ZodDate = class extends ZodType {
+var ZodDate = class _ZodDate extends ZodType {
   _parse(input) {
     if (this._def.coerce) {
       input.data = new Date(input.data);
@@ -1978,7 +1968,7 @@ var ZodDate = class extends ZodType {
     };
   }
   _addCheck(check) {
-    return new ZodDate({
+    return new _ZodDate({
       ...this._def,
       checks: [...this._def.checks, check]
     });
@@ -2157,7 +2147,7 @@ ZodVoid.create = (params) => {
     ...processCreateParams(params)
   });
 };
-var ZodArray = class extends ZodType {
+var ZodArray = class _ZodArray extends ZodType {
   _parse(input) {
     const { ctx, status } = this._processInputParams(input);
     const def = this._def;
@@ -2227,19 +2217,19 @@ var ZodArray = class extends ZodType {
     return this._def.type;
   }
   min(minLength, message) {
-    return new ZodArray({
+    return new _ZodArray({
       ...this._def,
       minLength: { value: minLength, message: errorUtil.toString(message) }
     });
   }
   max(maxLength, message) {
-    return new ZodArray({
+    return new _ZodArray({
       ...this._def,
       maxLength: { value: maxLength, message: errorUtil.toString(message) }
     });
   }
   length(len, message) {
-    return new ZodArray({
+    return new _ZodArray({
       ...this._def,
       exactLength: { value: len, message: errorUtil.toString(message) }
     });
@@ -2284,7 +2274,7 @@ function deepPartialify(schema) {
     return schema;
   }
 }
-var ZodObject = class extends ZodType {
+var ZodObject = class _ZodObject extends ZodType {
   constructor() {
     super(...arguments);
     this._cached = null;
@@ -2346,8 +2336,7 @@ var ZodObject = class extends ZodType {
           });
           status.dirty();
         }
-      } else if (unknownKeys === "strip")
-        ;
+      } else if (unknownKeys === "strip") ;
       else {
         throw new Error(`Internal ZodObject error: invalid unknownKeys value.`);
       }
@@ -2390,7 +2379,7 @@ var ZodObject = class extends ZodType {
   }
   strict(message) {
     errorUtil.errToObj;
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       unknownKeys: "strict",
       ...message !== void 0 ? {
@@ -2409,13 +2398,13 @@ var ZodObject = class extends ZodType {
     });
   }
   strip() {
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       unknownKeys: "strip"
     });
   }
   passthrough() {
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       unknownKeys: "passthrough"
     });
@@ -2438,7 +2427,7 @@ var ZodObject = class extends ZodType {
   //     }) as any;
   //   };
   extend(augmentation) {
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       shape: () => ({
         ...this._def.shape(),
@@ -2452,7 +2441,7 @@ var ZodObject = class extends ZodType {
    * upgrade if you are experiencing issues.
    */
   merge(merging) {
-    const merged = new ZodObject({
+    const merged = new _ZodObject({
       unknownKeys: merging._def.unknownKeys,
       catchall: merging._def.catchall,
       shape: () => ({
@@ -2523,7 +2512,7 @@ var ZodObject = class extends ZodType {
   //   return merged;
   // }
   catchall(index) {
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       catchall: index
     });
@@ -2535,7 +2524,7 @@ var ZodObject = class extends ZodType {
         shape[key] = this.shape[key];
       }
     });
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       shape: () => shape
     });
@@ -2547,7 +2536,7 @@ var ZodObject = class extends ZodType {
         shape[key] = this.shape[key];
       }
     });
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       shape: () => shape
     });
@@ -2568,7 +2557,7 @@ var ZodObject = class extends ZodType {
         newShape[key] = fieldSchema.optional();
       }
     });
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       shape: () => newShape
     });
@@ -2587,7 +2576,7 @@ var ZodObject = class extends ZodType {
         newShape[key] = newField;
       }
     });
-    return new ZodObject({
+    return new _ZodObject({
       ...this._def,
       shape: () => newShape
     });
@@ -2745,7 +2734,7 @@ var getDiscriminator = (type) => {
     return [];
   }
 };
-var ZodDiscriminatedUnion = class extends ZodType {
+var ZodDiscriminatedUnion = class _ZodDiscriminatedUnion extends ZodType {
   _parse(input) {
     const { ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.object) {
@@ -2812,7 +2801,7 @@ var ZodDiscriminatedUnion = class extends ZodType {
         optionsMap.set(value, type);
       }
     }
-    return new ZodDiscriminatedUnion({
+    return new _ZodDiscriminatedUnion({
       typeName: ZodFirstPartyTypeKind.ZodDiscriminatedUnion,
       discriminator,
       options,
@@ -2912,7 +2901,7 @@ ZodIntersection.create = (left, right, params) => {
     ...processCreateParams(params)
   });
 };
-var ZodTuple = class extends ZodType {
+var ZodTuple = class _ZodTuple extends ZodType {
   _parse(input) {
     const { status, ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.array) {
@@ -2962,7 +2951,7 @@ var ZodTuple = class extends ZodType {
     return this._def.items;
   }
   rest(rest) {
-    return new ZodTuple({
+    return new _ZodTuple({
       ...this._def,
       rest
     });
@@ -2979,7 +2968,7 @@ ZodTuple.create = (schemas, params) => {
     ...processCreateParams(params)
   });
 };
-var ZodRecord = class extends ZodType {
+var ZodRecord = class _ZodRecord extends ZodType {
   get keySchema() {
     return this._def.keyType;
   }
@@ -3017,14 +3006,14 @@ var ZodRecord = class extends ZodType {
   }
   static create(first, second, third) {
     if (second instanceof ZodType) {
-      return new ZodRecord({
+      return new _ZodRecord({
         keyType: first,
         valueType: second,
         typeName: ZodFirstPartyTypeKind.ZodRecord,
         ...processCreateParams(third)
       });
     }
-    return new ZodRecord({
+    return new _ZodRecord({
       keyType: ZodString.create(),
       valueType: first,
       typeName: ZodFirstPartyTypeKind.ZodRecord,
@@ -3098,7 +3087,7 @@ ZodMap.create = (keyType, valueType, params) => {
     ...processCreateParams(params)
   });
 };
-var ZodSet = class extends ZodType {
+var ZodSet = class _ZodSet extends ZodType {
   _parse(input) {
     const { status, ctx } = this._processInputParams(input);
     if (ctx.parsedType !== ZodParsedType.set) {
@@ -3156,13 +3145,13 @@ var ZodSet = class extends ZodType {
     }
   }
   min(minSize, message) {
-    return new ZodSet({
+    return new _ZodSet({
       ...this._def,
       minSize: { value: minSize, message: errorUtil.toString(message) }
     });
   }
   max(maxSize, message) {
-    return new ZodSet({
+    return new _ZodSet({
       ...this._def,
       maxSize: { value: maxSize, message: errorUtil.toString(message) }
     });
@@ -3183,7 +3172,7 @@ ZodSet.create = (valueType, params) => {
     ...processCreateParams(params)
   });
 };
-var ZodFunction = class extends ZodType {
+var ZodFunction = class _ZodFunction extends ZodType {
   constructor() {
     super(...arguments);
     this.validate = this.implement;
@@ -3270,13 +3259,13 @@ var ZodFunction = class extends ZodType {
     return this._def.returns;
   }
   args(...items) {
-    return new ZodFunction({
+    return new _ZodFunction({
       ...this._def,
       args: ZodTuple.create(items).rest(ZodUnknown.create())
     });
   }
   returns(returnType) {
-    return new ZodFunction({
+    return new _ZodFunction({
       ...this._def,
       returns: returnType
     });
@@ -3290,7 +3279,7 @@ var ZodFunction = class extends ZodType {
     return validatedFunc;
   }
   static create(args, returns, params) {
-    return new ZodFunction({
+    return new _ZodFunction({
       args: args ? args : ZodTuple.create([]).rest(ZodUnknown.create()),
       returns: returns || ZodUnknown.create(),
       typeName: ZodFirstPartyTypeKind.ZodFunction,
@@ -3346,7 +3335,7 @@ function createZodEnum(values, params) {
     ...processCreateParams(params)
   });
 }
-var ZodEnum = class extends ZodType {
+var ZodEnum = class _ZodEnum extends ZodType {
   constructor() {
     super(...arguments);
     _ZodEnum_cache.set(this, void 0);
@@ -3402,13 +3391,13 @@ var ZodEnum = class extends ZodType {
     return enumValues;
   }
   extract(values, newDef = this._def) {
-    return ZodEnum.create(values, {
+    return _ZodEnum.create(values, {
       ...this._def,
       ...newDef
     });
   }
   exclude(values, newDef = this._def) {
-    return ZodEnum.create(this.options.filter((opt) => !values.includes(opt)), {
+    return _ZodEnum.create(this.options.filter((opt) => !values.includes(opt)), {
       ...this._def,
       ...newDef
     });
@@ -3777,7 +3766,7 @@ var ZodBranded = class extends ZodType {
     return this._def.type;
   }
 };
-var ZodPipeline = class extends ZodType {
+var ZodPipeline = class _ZodPipeline extends ZodType {
   _parse(input) {
     const { status, ctx } = this._processInputParams(input);
     if (ctx.common.async) {
@@ -3825,7 +3814,7 @@ var ZodPipeline = class extends ZodType {
     }
   }
   static create(a, b) {
-    return new ZodPipeline({
+    return new _ZodPipeline({
       in: a,
       out: b,
       typeName: ZodFirstPartyTypeKind.ZodPipeline
@@ -5279,7 +5268,7 @@ function parseStringDef(def, refs) {
         case "trim":
           break;
         default:
-          ((_) => {
+          /* @__PURE__ */ ((_) => {
           })(check);
       }
     }
@@ -5973,7 +5962,7 @@ var selectParser = (def, typeName, refs) => {
     case ZodFirstPartyTypeKind.ZodSymbol:
       return void 0;
     default:
-      return ((_) => void 0)(typeName);
+      return /* @__PURE__ */ ((_) => void 0)(typeName);
   }
 };
 var addMeta = (def, refs, jsonSchema) => {
@@ -6617,7 +6606,7 @@ function createId(prefix) {
 }
 
 // src/stores/AgentStore.ts
-var _AgentStore = class {
+var AgentStore = class _AgentStore {
   /**
    * Register an agent
    */
@@ -6673,10 +6662,9 @@ var _AgentStore = class {
   static getRandomColor() {
     return "#" + Math.floor(Math.random() * 16777215).toString(16);
   }
+  // Singleton Agent Store
+  static agents = [];
 };
-var AgentStore = _AgentStore;
-// Singleton Agent Store
-__publicField(AgentStore, "agents", []);
 var AgentStore_default = AgentStore;
 
 // src/operations/agents.ts
@@ -6695,7 +6683,7 @@ function agentLeave(agentId) {
 }
 
 // src/stores/MessageStore.ts
-var _MessageStore = class {
+var MessageStore = class _MessageStore {
   /**
    * Add a message
    * @param senderId
@@ -6743,12 +6731,11 @@ var _MessageStore = class {
   static countMessages() {
     return _MessageStore.messages.length;
   }
+  // Singleton message store
+  static messages = [];
+  // Maximum number of messages to store
+  static messageLimit = 100;
 };
-var MessageStore = _MessageStore;
-// Singleton message store
-__publicField(MessageStore, "messages", []);
-// Maximum number of messages to store
-__publicField(MessageStore, "messageLimit", 100);
 var MessageStore_default = MessageStore;
 
 // src/operations/messages.ts
@@ -6766,7 +6753,7 @@ function clearMessages() {
 }
 
 // src/stores/TaskStore.ts
-var _TaskStore = class {
+var TaskStore = class _TaskStore {
   /**
    * Add a task
    * - Assigns an id and color
@@ -6825,10 +6812,9 @@ var _TaskStore = class {
   static countTasks() {
     return _TaskStore.tasks.length;
   }
+  // Singleton task store
+  static tasks = [];
 };
-var TaskStore = _TaskStore;
-// Singleton task store
-__publicField(TaskStore, "tasks", []);
 var TaskStore_default = TaskStore;
 
 // src/operations/tasks.ts

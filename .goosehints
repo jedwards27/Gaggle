@@ -1,25 +1,11 @@
 # GooseTeam
-We are working on a way for multiple codename goose sessions to collaborate using Model Context Protocol (MCP)
+We are working on a way for multiple goose sessions to collaborate using Model Context Protocol (MCP).
 
 ## Status
-### Working on Phase 1 by expanding the MCP toolset available to GooseTeam agents for collaboration.
-
-## Phase 1 (Working MCP Server and Protocol for Collaborative Agents)
-In folder ./p1
-- An MCP server and protocol for collaboration
-- Each MCP tool is implemented in the p1/src/operations folder and tested in p1/src/operations/__tests__
-- A typescript project with the all the usual package.json, tsconfig.json, etc.
-- The src folder will contain the code for the server, with routes modularized to keep the server itself simple
+* Working, unit-tested MCP server in src/ folder, built with Typescript
+* Currently expanding the MCP toolset available to GooseTeam agents for collaboration.
+* Task tools have been added, but the protocol does not yet direct agents in their use.
 
 # MCP Specification
 The full Model Context Protocol specification is in /Users/cliffhall/Projects/mcp-specification
 with the typescript spec defined here: /Users/cliffhall/Projects/mcp-specification/schema/2024-11-05/schema.ts
-
-# Implementation Reference
-Here is an MCP server implementation you can refer to for style. It is for communication with GitHub.
-We will take a similar modular approach: /Users/cliffhall/Projects/mcp-servers/src/github
-
-## Phase 0 (Inspiration)
-In folder ./p0
-- Just a simple server and a protocol for interacting with it defined in markdown that proved it could work.
-
