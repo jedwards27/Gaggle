@@ -3,7 +3,6 @@ import { addTask, listTasks, assignTask, completeTask } from "../tasks.ts";
 import TaskStore from "../../stores/TaskStore.ts";
 import AgentStore from "../../stores/AgentStore.ts";
 
-
 /**
  * Test addTask
  */
@@ -66,14 +65,22 @@ describe("assignTask", () => {
   it("should throw an error if taskId or agentId is missing", () => {
     const task = TaskStore.addTask("Test task");
     const agent = AgentStore.registerAgent();
-    expect(() => assignTask({ taskId: "", agentId: agent.id })).toThrowError("Task ID and Agent ID are required");
-    expect(() => assignTask({ taskId: task.id, agentId: "" })).toThrowError("Task ID and Agent ID are required");
+    expect(() => assignTask({ taskId: "", agentId: agent.id })).toThrowError(
+      "Task ID and Agent ID are required",
+    );
+    expect(() => assignTask({ taskId: task.id, agentId: "" })).toThrowError(
+      "Task ID and Agent ID are required",
+    );
   });
 
   it("should throw an error if task or agent is not found", () => {
-    expect(() => assignTask({ taskId: "nonexistent", agentId: "agent" })).toThrowError("Task with ID nonexistent not found");
+    expect(() =>
+      assignTask({ taskId: "nonexistent", agentId: "agent" }),
+    ).toThrowError("Task with ID nonexistent not found");
     const task = TaskStore.addTask("Test task");
-    expect(() => assignTask({ taskId: task.id, agentId: "nonexistent" })).toThrowError("Agent with ID nonexistent not found");
+    expect(() =>
+      assignTask({ taskId: task.id, agentId: "nonexistent" }),
+    ).toThrowError("Agent with ID nonexistent not found");
   });
 });
 
@@ -93,10 +100,14 @@ describe("completeTask", () => {
   });
 
   it("should throw an error if taskId is missing", () => {
-    expect(() => completeTask("")).toThrowError("Task ID and Agent ID are required");
+    expect(() => completeTask("")).toThrowError(
+      "Task ID and Agent ID are required",
+    );
   });
 
   it("should throw an error if task is not found", () => {
-    expect(() => completeTask("nonexistent")).toThrowError("Task with ID nonexistent not found");
+    expect(() => completeTask("nonexistent")).toThrowError(
+      "Task with ID nonexistent not found",
+    );
   });
 });
