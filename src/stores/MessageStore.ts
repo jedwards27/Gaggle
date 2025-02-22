@@ -38,7 +38,7 @@ class MessageStore {
    * @returns Message[]
    */
   static listMessages(): Message[] {
-    return MessageStore.messages.reverse();
+    return [...MessageStore.messages].reverse();
   }
 
   /**
