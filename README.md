@@ -22,7 +22,7 @@
 * Enter `goose-team` for name
 * Enter http://localhost:8080/sse for SSE endpoint URI
 
-### Run these npm scripts in order:
+#### Run these npm scripts in order:
 * First, clone this repo to your local machine and [install dependencies](#install-dependencies)
 * `npm run build` - to build the server from source.
 * `npm run mcp-proxy` to start an SSE proxy to talk to a single instance of the goose-team MCP server,
