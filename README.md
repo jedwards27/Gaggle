@@ -1,14 +1,50 @@
 # GooseTeam
 
-## MCP Server and Collaboration Protocol for Goose Agents
-
-- **Purpose:** Allow multiple [codename goose](https://block.github.io/goose/) agents to collaborate
+## A Protocol and MCP Server for Goose Agents to Collaborate
+- **Purpose:** Allow multiple [goose](https://block.github.io/goose/) agents to collaborate
 - **Features:**
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
   - **Task Management:** Project Coordinator role creates and assigns tasks and roles to other agents. 
   - **Agent Waiting:** Allows connected agents to wait for a specified period before taking another action. 
   - **Remote Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
+
+## Work in Progress
+* Current focus is on [Goose CLI](https://block.github.io/goose/docs/getting-started/installation/) integration, so you must have it installed.
+* It might work with the desktop app, but so far we haven't tried. 
+* Workflow may be clunky at the moment, but we're working on it.
+
+### How to Run 
+#### Tell Goose about the extension
+* Run `goose configure`
+* Choose **[Add Extension]()**
+* Choose **Remote Extension**
+* Enter `goose-team` for name
+* Enter http://localhost:8080/sse for SSE endpoint URI
+
+### Run these npm scripts in order:
+* First, clone this repo to your local machine and [install dependencies](#install-dependencies)
+* `npm run build` - to build the server from source.
+* `npm run mcp-proxy` to start an SSE proxy to talk to a single instance of the goose-team MCP server,
+* `npm run inspector` to launch the MCP inspector in a browser 
+  * Here you click **connect**, then `list_tools`, then `add_message`, then from `Human` send a message describing a task or project for the team to work on.
+* `npm run agent` to launch an agent that will read the protocol and instructions, connect to the `goose-team` server, assign itself as project coordinator, then begin creating tasks.
+  * In the inspector window, click `list_tasks` to see the tasks it is adding, 
+  * When there are some tasks, you can `npm run agent` again and again to launch agents to be assigned tasks by the Project Coordinator.
+
+## Troubleshooting
+### HOW WELL GOOSE TEAM WORKS DEPENDS ON THE MODEL!!!
+* `npm run build` - to build the server from source.
+* `npm run mcp-proxy` to start an SSE proxy to talk to a single instance of the goose-team MCP server,
+
+You can, instead of running agent npm script as above, run `agent:test` This launches an agent hitting the same MCP, but it has a simpler protocol: Say hello in a different language, wait 2 seconds and do it again.
+
+Currently, the only models I can get to stay in the loop with are `google/gemini-2.0-flash-001` (via [openrouter.ai](https://openrouter.ai) to avoid rate limit shutdowns) and `openai/gpt-4o`. 
+Others will fall out of the loop. It is important for the model to follow the protocol and stay in the loop, checking messages, sleeping, particularly for the Project Coordinator.
+
+So, I suggest doing build, mcp-proxy, and agent:test and if the model you have configured does some work then stops with a "message loop ended" error, you have a model that just isn't very good at using tools. Try different models and see what works. If you get anythiing other than the above mentioned models to actually stay on the job, then please let me know!  (edited)
+
+
 
 ## Screenshots
 
@@ -142,10 +178,18 @@
 ### Agent
 
 - `npm run agent`
-- Starts a new GooseTeam agent, with its waddling orders given in: `instructions.md`
+- Starts a new GooseTeam agent, with its waddling orders given in: `goose-team_instructions.md`
 - First agent will assume Project Coordinator Role
-- NOTE: It's best to connect to the server with the Inspector BEFORE launching the first agent
+- **NOTE:** It's best to connect to the server with the Inspector BEFORE launching the first agent
   - Send a message from "Human" telling it what you'd like the team to accomplish
+
+### Agent Test
+
+- `npm run agent:test`
+- Starts a new GooseTeam agent, with its waddling orders given in: `goose-team_wait_test.md`
+- This will test the configured model's ability to stay in the loop, checking messages periodically.
+- If it ends with an error saying "outgoing message queue empty" then it is not a good tool use model and therefore a poor candidate for use with GooseTeam.
+- **NOTE:** Make sure to have the MCP Proxy running first.
 
 ### Format
 

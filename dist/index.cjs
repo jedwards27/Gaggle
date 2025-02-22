@@ -6716,7 +6716,7 @@ var MessageStore = class _MessageStore {
    * @returns Message[]
    */
   static listMessages() {
-    return _MessageStore.messages.reverse();
+    return [..._MessageStore.messages].reverse();
   }
   /**
    * Clear all messages
