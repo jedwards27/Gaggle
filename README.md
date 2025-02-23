@@ -34,16 +34,16 @@
 
 ## Troubleshooting
 ### HOW WELL GOOSE TEAM WORKS DEPENDS ON THE MODEL!!!
+Follow these steps to test if you have a model that will work.
 * `npm run build` - to build the server from source.
 * `npm run mcp-proxy` to start an SSE proxy to talk to a single instance of the goose-team MCP server,
-
-You can, instead of running agent npm script as above, run `agent:test` This launches an agent hitting the same MCP, but it has a simpler protocol: Say hello in a different language, wait 2 seconds and do it again.
+* `npm run agent:test` This launches an agent hitting the same MCP, but it has a simpler protocol: Say hello in a different language, wait 2 seconds and do it again.
+* [Here is a video](https://youtu.be/we1ESnafqy4?si=mg2bxQ1k4SePf5yh) of a successful `agent:test` run.
 
 Currently, the only models I can get to stay in the loop with are `google/gemini-2.0-flash-001` (via [openrouter.ai](https://openrouter.ai) to avoid rate limit shutdowns) and `openai/gpt-4o`. 
 Others will fall out of the loop. It is important for the model to follow the protocol and stay in the loop, checking messages, sleeping, particularly for the Project Coordinator.
 
-So, I suggest doing build, mcp-proxy, and agent:test and if the model you have configured does some work then stops with a "message loop ended" error, you have a model that just isn't very good at using tools. Try different models and see what works. If you get anythiing other than the above mentioned models to actually stay on the job, then please let me know!  (edited)
-
+I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have configured does some work then stops with a "message loop ended" error, you have a model that just isn't very good at using tools. Try different models and see what works. If you get anything other than the above-mentioned models to actually stay on the job, then please let me know!
 
 
 ## Screenshots
