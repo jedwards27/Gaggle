@@ -16,7 +16,7 @@
 
 ## NEW! 
 Agent protocol expressed as a [mermaid chart](https://github.com/cliffhall/GooseTeam/issues/1).
-See if your favorite LLM can follow it using the [`agent-prtoco](#agent---protocol-as-chart) to launch your agent
+See if your favorite LLM can follow it using the [`agent:chart`](#agent---protocol-as-chart) script to launch your agent!
 ![mermaid-ok-sez-gpt-4o.png](images/mermaid-ok-sez-gpt-4o.png)
 
 
