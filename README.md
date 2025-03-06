@@ -14,13 +14,19 @@
 * It might work with the desktop app, but so far we haven't tried. 
 * Workflow may be clunky at the moment, but we're working on it.
 
+## NEW! 
+Agent protocol expressed as a [mermaid chart](https://github.com/cliffhall/GooseTeam/issues/1).
+See if your favorite LLM can follow it using the [`agent-prtoco](#agent---protocol-as-chart) to launch your agent
+![mermaid-ok-sez-gpt-4o.png](images/mermaid-ok-sez-gpt-4o.png)
+
+
 ### How to Run 
 #### Tell Goose about the extension
 * Run `goose configure`
 * Choose **[Add Extension]()**
 * Choose **Remote Extension**
 * Enter `goose-team` for name
-* Enter http://localhost:8080/sse for SSE endpoint URI
+* Enter http://localhost:3001/sse for SSE endpoint URI
 
 #### Run these npm scripts in order:
 * First, clone this repo to your local machine and [install dependencies](#install-dependencies)
@@ -159,7 +165,7 @@ I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have
 ### MCP Proxy
 
 - `npm run mcp-proxy`
-- Launches an SSE-based/MCP proxy on port `:8080` with endpoint `/sse`
+- Launches an SSE-based/MCP proxy on port `:3001` with endpoint `/sse`
 - This has a single instance of the MCP server which multiple clients can connect to via SSE
 - **MUST BE LAUNCHED BEFORE RUNNING INSPECTOR**
 
@@ -167,26 +173,40 @@ I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have
 
 - `npm run inspector`
 - Runs the [Model Context Protocol Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
-- The Inspector UI will be available at: http://localhost:8080
+- The Inspector UI will be available at: http://localhost:5173
 - In the Inspector UI:
   - Make sure `Transport Type` is set to `SSE`
-  - Make sure `URL` is set to http://localhost:8080/sse
+  - Make sure `URL` is set to http://localhost:3001/sse
   - Click its **"Connect"** button to connect to the MCP Proxy
     - You should see Green light 🟢and **"Connected"** message.
   - Click its **List Tools** button
 
-### Agent
+### Agent - Protocol as Text
 
-- `npm run agent`
-- Starts a new GooseTeam agent, with its waddling orders given in: `goose-team_instructions.md`
+- `npm run agent:text`
+- Starts a new GooseTeam agent, with its waddling orders given in: `instructions/protocol-as-text.md`
+  - This agent's protocol instructions are expressed in text markdown format, with headers, text, and bullets.
+  - NOTE: It is a natural language prompt, but because it requires waiting and staying in a loop, some LLMs may balk
+  - If the LLM won't stay in the loop, try the [Agent Wait Test](#agent-wait-test) with different LLMs to find one that is suitable.
 - First agent will assume Project Coordinator Role
 - **NOTE:** It's best to connect to the server with the Inspector BEFORE launching the first agent
   - Send a message from "Human" telling it what you'd like the team to accomplish
 
-### Agent Test
+### Agent - Protocol as Chart
 
-- `npm run agent:test`
-- Starts a new GooseTeam agent, with its waddling orders given in: `goose-team_wait_test.md`
+- `npm run agent:chart`
+- Starts a new GooseTeam agent, with its waddling orders given in: `instructions/protocol-as-chart.md`
+  - This agent's protocol instructions are expressed in mermaid markdown format, a compact way for expressing flowcharts.
+  - NOTE: although this is an efficient way of expressing the protocol, some LLMs may not understand it
+  - If the LLM doesn't understand mermaid markdown, it will say so and quit. 
+- First agent will assume Project Coordinator Role
+- **NOTE:** It's best to connect to the server with the Inspector BEFORE launching the first agent
+  - Send a message from "Human" telling it what you'd like the team to accomplish
+
+### Agent Wait Test
+
+- `npm run agent:wait:test`
+- Starts a new GooseTeam agent, with its waddling orders given in: `instructions/wait-loop-test.md`
 - This will test the configured model's ability to stay in the loop, checking messages periodically.
 - If it ends with an error saying "outgoing message queue empty" then it is not a good tool use model and therefore a poor candidate for use with GooseTeam.
 - **NOTE:** Make sure to have the MCP Proxy running first.
