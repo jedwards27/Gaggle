@@ -2,7 +2,10 @@
 
 ## A Protocol and MCP Server for Goose Agents to Collaborate
 - **Purpose:** Allow multiple [goose](https://block.github.io/goose/) agents to collaborate
-- **Features:**
+- **Protocol:** A set of rules for agents to follow. 
+  - **Natural Language**: Streamlined and human-readable set of instructions about how to behave and use the tools.
+  - **Mermaid Markdown**: A precise flowchart for behavior, expressed in the most efficient text form.
+- **Extension:** A Goose extension that provides tools for the agents to use for tasks and messaging.
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
   - **Task Management:** Project Coordinator role creates and assigns tasks and roles to other agents. 
@@ -14,21 +17,21 @@
 * It might work with the desktop app, but so far we haven't tried. 
 * Workflow may be clunky at the moment, but we're working on it.
 
-## NEW! 
+## NEW: Behavioral Control with Mermaid markdown!
 Agent protocol expressed as a [mermaid chart](https://github.com/cliffhall/GooseTeam/issues/1).
 See if your favorite LLM can follow it using the [`agent:chart`](#agent---protocol-as-chart) script to launch your agent!
 ![mermaid-ok-sez-gpt-4o.png](images/mermaid-ok-sez-gpt-4o.png)
 
 
-### How to Run 
-#### Tell Goose about the extension
+## How to Run 
+### Tell Goose about the extension
 * Run `goose configure`
 * Choose **[Add Extension]()**
 * Choose **Remote Extension**
 * Enter `goose-team` for name
 * Enter http://localhost:3001/sse for SSE endpoint URI
 
-#### Run these npm scripts in order:
+### Run these npm scripts in order:
 * First, clone this repo to your local machine and [install dependencies](#install-dependencies)
 * `npm run build` - to build the server from source.
 * `npm run mcp-proxy` to start an SSE proxy to talk to a single instance of the goose-team MCP server,
@@ -53,7 +56,6 @@ I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have
 
 
 ## Screenshots
-
 ### Goose Agents
 
 ![Goose Agents](images/goose-agents.png)
