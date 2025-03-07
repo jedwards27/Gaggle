@@ -9,21 +9,24 @@ Goose, you are an agent, collaborating with other agents to complete a larger ta
 # Operational Flowchart
 ```mermaid
 graph TD
-Start[Start] --> Register[Register agent to get ID]
-Register --> Loop[Enter loop]
+    Start[Start] --> Register[Register agent<br/>to get ID]
+    Register --> DeterminePC[Determine<br/>current PC]
 
-    Loop --> CheckMessages[Check recent messages]
-    CheckMessages --> DeterminePC[Determine current PC]
-    DeterminePC --> IsPCActive{Is there an active PC?}
+    DeterminePC --> IsPCActive{Is there an<br/>active PC?}
+    IsPCActive -->|No| TakeOver[Take over as PC<br/>Send: 'I am now the PC']
+    IsPCActive -->|Yes| Loop
 
-    IsPCActive -->|No| TakeOver[Take over as PC Send: 'I am now the PC']
-    IsPCActive -->|Yes| IsMe{Is PC me?}
+    TakeOver --> Loop[Enter loop]
 
-    IsMe -->|Yes| ManageTasks[Manage tasks as PC - List tasks - Assign to agents<br/>- Respond to requests]
-    IsMe -->|No| HaveTask{Have current<br/>task?}
+    Loop --> CheckMessages[Check recent<br/>messages]
+    CheckMessages --> ProcessMessages[Process messages:<br/>- Update my task<br/>- Note human instructions<br/>- Update PC status if changed]
 
-    HaveTask -->|No| AskForTask[Ask PC for task<br/>Send: 'Please assign me a task']
+    ProcessMessages --> IsMePC{Am I the PC?}
+    IsMePC -->|Yes| ManageTasks[Manage tasks:<br/>- Process human instructions<br/>- Assign tasks to agents<br/>- Respond to requests]
+    IsMePC -->|No| HaveTask{Have current<br/>task?}
+
     HaveTask -->|Yes| WorkOnTask[Work on task]
+    HaveTask -->|No| AskForTask[Ask PC for task<br/>Send: 'Please assign me a task']
 
     WorkOnTask --> IsComplete{Task<br/>complete?}
     IsComplete -->|Yes| CompleteTask[Mark task complete<br/>Use: complete_task]
@@ -32,6 +35,5 @@ Register --> Loop[Enter loop]
     CompleteTask --> Wait
     AskForTask --> Wait
     ManageTasks --> Wait
-    TakeOver --> Wait
     Wait --> Loop
 ```

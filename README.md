@@ -21,7 +21,7 @@
 Agent protocol expressed as a [mermaid chart](https://github.com/cliffhall/GooseTeam/issues/1).
 See if your favorite LLM can follow it using the [`agent:chart`](#agent---protocol-as-chart) script to launch your agent!
 ### GooseTeam Protocol as a Chart
-![goose-protocol-chart.png](images/goose-protocol-chart.png)
+![goose-protocol-chart.png](images/goose-team-protocol-chart.png)
 ### GPT-4o Says OK to this as a control mechanism
 ![mermaid-ok-sez-gpt-4o.png](images/mermaid-ok-sez-gpt-4o.png)
 
