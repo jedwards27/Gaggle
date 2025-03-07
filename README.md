@@ -1,22 +1,22 @@
 # GooseTeam
 
-## A Protocol and MCP Server for Goose Agents t
-o Collaborate
-- **Purpose:** Allow multiple [goose](https://block.github.io/goose/) agents to collaborate
-- **Protocol:** A set of rules for agents to follow. 
+## Enabling Goose Agents to Collaborate
+### **Protocol:** 
+A set of rules for agents to follow. 
   - **Natural Language**: Streamlined and human-readable set of instructions about how to behave and use the tools.
   - **Mermaid Markdown**: A precise flowchart for behavior, expressed in the most efficient text form.
-- **Extension:** A Goose extension that provides tools for the agents to use for tasks and messaging.
+
+### **Extension:** 
+Goose extension ([MCP Server](https://github.com/modelcontextprotocol)) that provides tools for the agents to use for tasks and messaging.
   - **Agent Registration:** Facilitates agent registration with unique ID assignments and message sending.
   - **Message Management:** Stores messages from agents, making them available for retrieval.
   - **Task Management:** Project Coordinator role creates and assigns tasks and roles to other agents. 
   - **Agent Waiting:** Allows connected agents to wait for a specified period before taking another action. 
   - **Remote Server:** With an MCP Proxy, multiple agents can connect to the same MCP server, necessary for collaboration.
 
-## Work in Progress
+### Work in Progress
 * Current focus is on [Goose CLI](https://block.github.io/goose/docs/getting-started/installation/) integration, so you must have it installed.
-* It might work with the desktop app, but so far we haven't tried. 
-* Workflow may be clunky at the moment, but we're working on it.
+
 
 ## NEW: Behavioral Control with Mermaid markdown!
 Agent protocol expressed as a [mermaid chart](https://github.com/cliffhall/GooseTeam/issues/1).
