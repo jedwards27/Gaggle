@@ -1,6 +1,7 @@
 # GooseTeam
 
-## A Protocol and MCP Server for Goose Agents to Collaborate
+## A Protocol and MCP Server for Goose Agents t
+o Collaborate
 - **Purpose:** Allow multiple [goose](https://block.github.io/goose/) agents to collaborate
 - **Protocol:** A set of rules for agents to follow. 
   - **Natural Language**: Streamlined and human-readable set of instructions about how to behave and use the tools.
@@ -20,11 +21,25 @@
 ## NEW: Behavioral Control with Mermaid markdown!
 Agent protocol expressed as a [mermaid chart](https://github.com/cliffhall/GooseTeam/issues/1).
 See if your favorite LLM can follow it using the [`agent:chart`](#agent---protocol-as-chart) script to launch your agent!
+
+## Screenshots
 ### GooseTeam Protocol as a Chart
 ![goose-protocol-chart.png](images/goose-team-protocol-chart.png)
+
 ### GPT-4o Says OK to this as a control mechanism
 ![Goose PC Follows Mermaid](images/mermaid-ok-sez-gpt-4o.png)
 
+### Goose Agents
+![Goose Agents](images/goose-agents.png)
+
+### Inspector - List Tools
+![Inspector](images/inspector.png)
+
+### Inspector - Add Message
+![inspector-add-message.png](images/inspector-add-message.png)
+
+### Inspector - List Tasks
+![inspector-list-tasks.png](images/inspector-list-tasks.png)
 
 ## How to Run 
 ### Tell Goose about the extension
@@ -57,15 +72,6 @@ Others will fall out of the loop. It is important for the model to follow the pr
 
 I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have configured does some work then stops with a "message loop ended" error, you have a model that just isn't very good at using tools. Try different models and see what works. If you get anything other than the above-mentioned models to actually stay on the job, then please let me know!
 
-
-## Screenshots
-### Goose Agents
-
-![Goose Agents](images/goose-agents.png)
-
-### Inspector
-
-![Inspector](images/inspector.png)
 
 
 ## MCP Tools
