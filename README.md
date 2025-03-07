@@ -23,7 +23,7 @@ See if your favorite LLM can follow it using the [`agent:chart`](#agent---protoc
 ### GooseTeam Protocol as a Chart
 ![goose-protocol-chart.png](images/goose-team-protocol-chart.png)
 ### GPT-4o Says OK to this as a control mechanism
-![mermaid-ok-sez-gpt-4o.png](images/mermaid-ok-sez-gpt-4o.png)
+![Goose PC Follows Mermaid](images/mermaid-ok-sez-gpt-4o.png)
 
 
 ## How to Run 
