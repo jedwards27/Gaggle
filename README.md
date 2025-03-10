@@ -3,7 +3,7 @@
 
 ## Enabling Goose Agents to Collaborate
 ### **Protocol:** 
-A set of rules for agents to follow, expressed in two flavors:
+An operational procedure for agents to follow, expressed in two flavors:
   - **Natural Language**: Streamlined and human-readable set of instructions about how to behave and use the tools.
   - **Mermaid Markdown**: A precise flowchart for behavior, expressed in the most efficient text form.
 
