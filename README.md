@@ -17,7 +17,7 @@ Goose extension ([MCP Server](https://github.com/modelcontextprotocol)) that pro
 
 ### Work in Progress
 * Current focus is on [Goose CLI](https://block.github.io/goose/docs/getting-started/installation/) integration, so you must have it installed. 
-  * Other agent platforms could integratew with this project easily. 
+  * Other agent platforms could integrate with this project easily. 
   * The protocol and the MCP server are not tightly coupled to goose, only the npm `agent:` scripts and in the protocol preamble.
 
 ## NEW: Behavioral Control with Mermaid markdown!
