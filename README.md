@@ -1,4 +1,5 @@
 # GooseTeam
+![GooseTeam Logo](images/goose-team.png)
 
 ## Enabling Goose Agents to Collaborate
 ### **Protocol:** 
