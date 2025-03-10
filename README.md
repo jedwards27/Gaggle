@@ -4,8 +4,8 @@
 ## Enabling Goose Agents to Collaborate
 ### **Protocol:** 
 An operational procedure for agents to follow, expressed in two flavors:
-  - **Natural Language**: Streamlined, human-readable instructions about how to behave and use the tools.
-  - **Mermaid Markdown**: A concise flowchart for expected behavior, described in an efficient text format.
+  - [**Natural Language**](instructions/protocol-as-text.md): Streamlined, human-readable instructions about how to behave and use the tools.
+  - [**Mermaid Markdown**](instructions/protocol-as-chart.md): A concise flowchart for expected behavior, described in an efficient text format.
 
 ### **Extension:** 
 Goose extension ([MCP Server](https://github.com/modelcontextprotocol)) that provides tools for the agents to use for tasks and messaging.
