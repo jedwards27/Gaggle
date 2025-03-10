@@ -5,7 +5,7 @@
 ### **Protocol:** 
 An operational procedure for agents to follow, expressed in two flavors:
   - **Natural Language**: Streamlined and human-readable set of instructions about how to behave and use the tools.
-  - **Mermaid Markdown**: A precise flowchart for behavior, expressed in the most efficient text form.
+  - **Mermaid Markdown**: A concise flowchart for expected behavior, described in an efficient text format.
 
 ### **Extension:** 
 Goose extension ([MCP Server](https://github.com/modelcontextprotocol)) that provides tools for the agents to use for tasks and messaging.
