@@ -188,7 +188,7 @@ I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have
 - `npm run sse:direct`
 - Launches an SSE-wrapped instance of the STDIO-wrapped GooseTeam MCP server on port `:3001` with endpoint `/sse`
 - Multiple clients can connect to the same server and see the same resources
-- Equivalent to the proxied STDIO approach.
+- Equivalent to the proxied STDIO approach, using our SSE version of the server.
 
 ### Inspector
 
