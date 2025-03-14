@@ -176,12 +176,19 @@ I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have
 - `npm run build`
 - Builds the stdio-based MCP server runtime at `/dist/index.js`
 
-### MCP Proxy
+### STDIO Server - Proxied
 
-- `npm run mcp-proxy`
+- `npm run stdio:proxy`
 - Launches an SSE-based/MCP proxy on port `:3001` with endpoint `/sse`
-- This has a single instance of the MCP server which multiple clients can connect to via SSE
-- **MUST BE LAUNCHED BEFORE RUNNING INSPECTOR**
+- This proxy talks to a single instance of the STDIO-wrapped GooseTeam MCP server
+- Multiple clients can connect to the same server and see the same resources
+
+### SSE Server - Direct
+
+- `npm run sse:direct`
+- Launches an SSE-wrapped instance of the STDIO-wrapped GooseTeam MCP server on port `:3001` with endpoint `/sse`
+- Multiple clients can connect to the same server and see the same resources
+- Equivalent to the proxied STDIO approach.
 
 ### Inspector
 
@@ -194,6 +201,7 @@ I suggest doing `build`,` mcp-proxy`, and `agent:test` and if the model you have
   - Click its **"Connect"** button to connect to the MCP Proxy
     - You should see Green light 🟢and **"Connected"** message.
   - Click its **List Tools** button
+- Multiple instances of the client can connect to the same server and share the same resources
 
 ### Agent - Protocol as Text
 
