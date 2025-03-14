@@ -22,6 +22,9 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
+var import_node_process = __toESM(require("node:process"), 1);
+
 // node_modules/zod/lib/index.mjs
 var util;
 (function(util2) {
@@ -4791,6 +4794,99 @@ var McpError = class extends Error {
     super(`MCP error ${code}: ${message}`);
     this.code = code;
     this.data = data;
+    this.name = "McpError";
+  }
+};
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
+var ReadBuffer = class {
+  append(chunk) {
+    this._buffer = this._buffer ? Buffer.concat([this._buffer, chunk]) : chunk;
+  }
+  readMessage() {
+    if (!this._buffer) {
+      return null;
+    }
+    const index = this._buffer.indexOf("\n");
+    if (index === -1) {
+      return null;
+    }
+    const line = this._buffer.toString("utf8", 0, index);
+    this._buffer = this._buffer.subarray(index + 1);
+    return deserializeMessage(line);
+  }
+  clear() {
+    this._buffer = void 0;
+  }
+};
+function deserializeMessage(line) {
+  return JSONRPCMessageSchema.parse(JSON.parse(line));
+}
+function serializeMessage(message) {
+  return JSON.stringify(message) + "\n";
+}
+
+// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
+var StdioServerTransport = class {
+  constructor(_stdin = import_node_process.default.stdin, _stdout = import_node_process.default.stdout) {
+    this._stdin = _stdin;
+    this._stdout = _stdout;
+    this._readBuffer = new ReadBuffer();
+    this._started = false;
+    this._ondata = (chunk) => {
+      this._readBuffer.append(chunk);
+      this.processReadBuffer();
+    };
+    this._onerror = (error) => {
+      var _a;
+      (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
+    };
+  }
+  /**
+   * Starts listening for messages on stdin.
+   */
+  async start() {
+    if (this._started) {
+      throw new Error("StdioServerTransport already started! If using Server class, note that connect() calls start() automatically.");
+    }
+    this._started = true;
+    this._stdin.on("data", this._ondata);
+    this._stdin.on("error", this._onerror);
+  }
+  processReadBuffer() {
+    var _a, _b;
+    while (true) {
+      try {
+        const message = this._readBuffer.readMessage();
+        if (message === null) {
+          break;
+        }
+        (_a = this.onmessage) === null || _a === void 0 ? void 0 : _a.call(this, message);
+      } catch (error) {
+        (_b = this.onerror) === null || _b === void 0 ? void 0 : _b.call(this, error);
+      }
+    }
+  }
+  async close() {
+    var _a;
+    this._stdin.off("data", this._ondata);
+    this._stdin.off("error", this._onerror);
+    const remainingDataListeners = this._stdin.listenerCount("data");
+    if (remainingDataListeners === 0) {
+      this._stdin.pause();
+    }
+    this._readBuffer.clear();
+    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
+  }
+  send(message) {
+    return new Promise((resolve) => {
+      const json = serializeMessage(message);
+      if (this._stdout.write(json)) {
+        resolve();
+      } else {
+        this._stdout.once("drain", resolve);
+      }
+    });
   }
 };
 
@@ -6030,6 +6126,7 @@ var Protocol = class {
     this._notificationHandlers = /* @__PURE__ */ new Map();
     this._responseHandlers = /* @__PURE__ */ new Map();
     this._progressHandlers = /* @__PURE__ */ new Map();
+    this._timeoutInfo = /* @__PURE__ */ new Map();
     this.setNotificationHandler(CancelledNotificationSchema, (notification) => {
       const controller = this._requestHandlerAbortControllers.get(notification.params.requestId);
       controller === null || controller === void 0 ? void 0 : controller.abort(notification.params.reason);
@@ -6042,6 +6139,35 @@ var Protocol = class {
       // Automatic pong by default.
       (_request) => ({})
     );
+  }
+  _setupTimeout(messageId, timeout, maxTotalTimeout, onTimeout) {
+    this._timeoutInfo.set(messageId, {
+      timeoutId: setTimeout(onTimeout, timeout),
+      startTime: Date.now(),
+      timeout,
+      maxTotalTimeout,
+      onTimeout
+    });
+  }
+  _resetTimeout(messageId) {
+    const info = this._timeoutInfo.get(messageId);
+    if (!info)
+      return false;
+    const totalElapsed = Date.now() - info.startTime;
+    if (info.maxTotalTimeout && totalElapsed >= info.maxTotalTimeout) {
+      this._timeoutInfo.delete(messageId);
+      throw new McpError(ErrorCode.RequestTimeout, "Maximum total timeout exceeded", { maxTotalTimeout: info.maxTotalTimeout, totalElapsed });
+    }
+    clearTimeout(info.timeoutId);
+    info.timeoutId = setTimeout(info.onTimeout, info.timeout);
+    return true;
+  }
+  _cleanupTimeout(messageId) {
+    const info = this._timeoutInfo.get(messageId);
+    if (info) {
+      clearTimeout(info.timeoutId);
+      this._timeoutInfo.delete(messageId);
+    }
   }
   /**
    * Attaches to the given transport, starts it, and starts listening for messages.
@@ -6092,7 +6218,7 @@ var Protocol = class {
     Promise.resolve().then(() => handler(notification)).catch((error) => this._onerror(new Error(`Uncaught error in notification handler: ${error}`)));
   }
   _onrequest(request) {
-    var _a, _b;
+    var _a, _b, _c;
     const handler = (_a = this._requestHandlers.get(request.method)) !== null && _a !== void 0 ? _a : this.fallbackRequestHandler;
     if (handler === void 0) {
       (_b = this._transport) === null || _b === void 0 ? void 0 : _b.send({
@@ -6107,7 +6233,11 @@ var Protocol = class {
     }
     const abortController = new AbortController();
     this._requestHandlerAbortControllers.set(request.id, abortController);
-    Promise.resolve().then(() => handler(request, { signal: abortController.signal })).then((result) => {
+    const extra = {
+      signal: abortController.signal,
+      sessionId: (_c = this._transport) === null || _c === void 0 ? void 0 : _c.sessionId
+    };
+    Promise.resolve().then(() => handler(request, extra)).then((result) => {
       var _a2;
       if (abortController.signal.aborted) {
         return;
@@ -6136,22 +6266,33 @@ var Protocol = class {
   }
   _onprogress(notification) {
     const { progressToken, ...params } = notification.params;
-    const handler = this._progressHandlers.get(Number(progressToken));
-    if (handler === void 0) {
+    const messageId = Number(progressToken);
+    const handler = this._progressHandlers.get(messageId);
+    if (!handler) {
       this._onerror(new Error(`Received a progress notification for an unknown token: ${JSON.stringify(notification)}`));
       return;
+    }
+    const responseHandler = this._responseHandlers.get(messageId);
+    if (this._timeoutInfo.has(messageId) && responseHandler) {
+      try {
+        this._resetTimeout(messageId);
+      } catch (error) {
+        responseHandler(error);
+        return;
+      }
     }
     handler(params);
   }
   _onresponse(response) {
-    const messageId = response.id;
-    const handler = this._responseHandlers.get(Number(messageId));
+    const messageId = Number(response.id);
+    const handler = this._responseHandlers.get(messageId);
     if (handler === void 0) {
       this._onerror(new Error(`Received a response for an unknown message ID: ${JSON.stringify(response)}`));
       return;
     }
-    this._responseHandlers.delete(Number(messageId));
-    this._progressHandlers.delete(Number(messageId));
+    this._responseHandlers.delete(messageId);
+    this._progressHandlers.delete(messageId);
+    this._cleanupTimeout(messageId);
     if ("result" in response) {
       handler(response);
     } else {
@@ -6198,12 +6339,23 @@ var Protocol = class {
           _meta: { progressToken: messageId }
         };
       }
-      let timeoutId = void 0;
+      const cancel = (reason) => {
+        var _a2;
+        this._responseHandlers.delete(messageId);
+        this._progressHandlers.delete(messageId);
+        this._cleanupTimeout(messageId);
+        (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
+          jsonrpc: "2.0",
+          method: "notifications/cancelled",
+          params: {
+            requestId: messageId,
+            reason: String(reason)
+          }
+        }).catch((error) => this._onerror(new Error(`Failed to send cancellation: ${error}`)));
+        reject(reason);
+      };
       this._responseHandlers.set(messageId, (response) => {
         var _a2;
-        if (timeoutId !== void 0) {
-          clearTimeout(timeoutId);
-        }
         if ((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.aborted) {
           return;
         }
@@ -6217,35 +6369,15 @@ var Protocol = class {
           reject(error);
         }
       });
-      const cancel = (reason) => {
-        var _a2;
-        this._responseHandlers.delete(messageId);
-        this._progressHandlers.delete(messageId);
-        (_a2 = this._transport) === null || _a2 === void 0 ? void 0 : _a2.send({
-          jsonrpc: "2.0",
-          method: "notifications/cancelled",
-          params: {
-            requestId: messageId,
-            reason: String(reason)
-          }
-        }).catch((error) => this._onerror(new Error(`Failed to send cancellation: ${error}`)));
-        reject(reason);
-      };
       (_c = options === null || options === void 0 ? void 0 : options.signal) === null || _c === void 0 ? void 0 : _c.addEventListener("abort", () => {
         var _a2;
-        if (timeoutId !== void 0) {
-          clearTimeout(timeoutId);
-        }
         cancel((_a2 = options === null || options === void 0 ? void 0 : options.signal) === null || _a2 === void 0 ? void 0 : _a2.reason);
       });
       const timeout = (_d = options === null || options === void 0 ? void 0 : options.timeout) !== null && _d !== void 0 ? _d : DEFAULT_REQUEST_TIMEOUT_MSEC;
-      timeoutId = setTimeout(() => cancel(new McpError(ErrorCode.RequestTimeout, "Request timed out", {
-        timeout
-      })), timeout);
+      const timeoutHandler = () => cancel(new McpError(ErrorCode.RequestTimeout, "Request timed out", { timeout }));
+      this._setupTimeout(messageId, timeout, options === null || options === void 0 ? void 0 : options.maxTotalTimeout, timeoutHandler);
       this._transport.send(jsonrpcRequest).catch((error) => {
-        if (timeoutId !== void 0) {
-          clearTimeout(timeoutId);
-        }
+        this._cleanupTimeout(messageId);
         reject(error);
       });
     });
@@ -6481,102 +6613,7 @@ var Server = class extends Protocol {
   }
 };
 
-// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
-var import_node_process = __toESM(require("node:process"), 1);
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/shared/stdio.js
-var ReadBuffer = class {
-  append(chunk) {
-    this._buffer = this._buffer ? Buffer.concat([this._buffer, chunk]) : chunk;
-  }
-  readMessage() {
-    if (!this._buffer) {
-      return null;
-    }
-    const index = this._buffer.indexOf("\n");
-    if (index === -1) {
-      return null;
-    }
-    const line = this._buffer.toString("utf8", 0, index);
-    this._buffer = this._buffer.subarray(index + 1);
-    return deserializeMessage(line);
-  }
-  clear() {
-    this._buffer = void 0;
-  }
-};
-function deserializeMessage(line) {
-  return JSONRPCMessageSchema.parse(JSON.parse(line));
-}
-function serializeMessage(message) {
-  return JSON.stringify(message) + "\n";
-}
-
-// node_modules/@modelcontextprotocol/sdk/dist/esm/server/stdio.js
-var StdioServerTransport = class {
-  constructor(_stdin = import_node_process.default.stdin, _stdout = import_node_process.default.stdout) {
-    this._stdin = _stdin;
-    this._stdout = _stdout;
-    this._readBuffer = new ReadBuffer();
-    this._started = false;
-    this._ondata = (chunk) => {
-      this._readBuffer.append(chunk);
-      this.processReadBuffer();
-    };
-    this._onerror = (error) => {
-      var _a;
-      (_a = this.onerror) === null || _a === void 0 ? void 0 : _a.call(this, error);
-    };
-  }
-  /**
-   * Starts listening for messages on stdin.
-   */
-  async start() {
-    if (this._started) {
-      throw new Error("StdioServerTransport already started! If using Server class, note that connect() calls start() automatically.");
-    }
-    this._started = true;
-    this._stdin.on("data", this._ondata);
-    this._stdin.on("error", this._onerror);
-  }
-  processReadBuffer() {
-    var _a, _b;
-    while (true) {
-      try {
-        const message = this._readBuffer.readMessage();
-        if (message === null) {
-          break;
-        }
-        (_a = this.onmessage) === null || _a === void 0 ? void 0 : _a.call(this, message);
-      } catch (error) {
-        (_b = this.onerror) === null || _b === void 0 ? void 0 : _b.call(this, error);
-      }
-    }
-  }
-  async close() {
-    var _a;
-    this._stdin.off("data", this._ondata);
-    this._stdin.off("error", this._onerror);
-    const remainingDataListeners = this._stdin.listenerCount("data");
-    if (remainingDataListeners === 0) {
-      this._stdin.pause();
-    }
-    this._readBuffer.clear();
-    (_a = this.onclose) === null || _a === void 0 ? void 0 : _a.call(this);
-  }
-  send(message) {
-    return new Promise((resolve) => {
-      const json = serializeMessage(message);
-      if (this._stdout.write(json)) {
-        resolve();
-      } else {
-        this._stdout.once("drain", resolve);
-      }
-    });
-  }
-};
-
-// src/schemas.ts
+// src/common/schemas.ts
 var noArgSchema = z.object({});
 var addMessageSchema = z.object({
   senderId: z.string().nonempty("Sender ID is required"),
@@ -6852,191 +6889,197 @@ var completeTask = (taskId) => {
   TaskStore_default.updateTask(taskId, { status: "completed" });
 };
 
-// src/index.ts
-var mcpServer = new Server(
-  {
-    name: "goose-team",
-    version: VERSION
-  },
-  {
-    capabilities: {
-      tools: {}
+// src/goose-team.ts
+var createServer = () => {
+  const server2 = new Server(
+    {
+      name: "goose-team",
+      version: VERSION
+    },
+    {
+      capabilities: {
+        tools: {}
+      }
     }
-  }
-);
-mcpServer.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: [
-      {
-        name: "register_agent",
-        description: "Register a new agent",
-        inputSchema: zodToJsonSchema(noArgSchema)
-      },
-      {
-        name: "list_agents",
-        description: "List all registered agents",
-        inputSchema: zodToJsonSchema(noArgSchema)
-      },
-      {
-        name: "agent_leave",
-        description: "Allow an agent to leave the team",
-        inputSchema: zodToJsonSchema(agentLeaveSchema)
-      },
-      {
-        name: "agent_wait",
-        description: "Wait for a specified number of seconds",
-        inputSchema: zodToJsonSchema(agentWaitSchema)
-      },
-      {
-        name: "add_message",
-        description: "Add a new message",
-        inputSchema: zodToJsonSchema(addMessageSchema)
-      },
-      {
-        name: "recent_messages",
-        description: "Retrieve recent messages",
-        inputSchema: zodToJsonSchema(noArgSchema)
-      },
-      {
-        name: "list_messages",
-        description: "Retrieve all messages",
-        inputSchema: zodToJsonSchema(noArgSchema)
-      },
-      {
-        name: "clear_messages",
-        description: "Clear all messages",
-        inputSchema: zodToJsonSchema(noArgSchema)
-      },
-      {
-        name: "add_task",
-        description: "Add a new task",
-        inputSchema: zodToJsonSchema(addTaskSchema)
-      },
-      {
-        name: "assign_task",
-        description: "Assign a task to an agent",
-        inputSchema: zodToJsonSchema(assignTaskSchema)
-      },
-      {
-        name: "list_tasks",
-        description: "List all tasks",
-        inputSchema: zodToJsonSchema(noArgSchema)
-      },
-      {
-        name: "complete_task",
-        description: "Complete a task",
-        inputSchema: zodToJsonSchema(completeTaskSchema)
+  );
+  server2.setRequestHandler(ListToolsRequestSchema, async () => {
+    return {
+      tools: [
+        {
+          name: "register_agent",
+          description: "Register a new agent",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "list_agents",
+          description: "List all registered agents",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "agent_leave",
+          description: "Allow an agent to leave the team",
+          inputSchema: zodToJsonSchema(agentLeaveSchema)
+        },
+        {
+          name: "agent_wait",
+          description: "Wait for a specified number of seconds",
+          inputSchema: zodToJsonSchema(agentWaitSchema)
+        },
+        {
+          name: "add_message",
+          description: "Add a new message",
+          inputSchema: zodToJsonSchema(addMessageSchema)
+        },
+        {
+          name: "recent_messages",
+          description: "Retrieve recent messages",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "list_messages",
+          description: "Retrieve all messages",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "clear_messages",
+          description: "Clear all messages",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "add_task",
+          description: "Add a new task",
+          inputSchema: zodToJsonSchema(addTaskSchema)
+        },
+        {
+          name: "assign_task",
+          description: "Assign a task to an agent",
+          inputSchema: zodToJsonSchema(assignTaskSchema)
+        },
+        {
+          name: "list_tasks",
+          description: "List all tasks",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "complete_task",
+          description: "Complete a task",
+          inputSchema: zodToJsonSchema(completeTaskSchema)
+        }
+      ]
+    };
+  });
+  server2.setRequestHandler(CallToolRequestSchema, async (request) => {
+    try {
+      switch (request.params.name) {
+        case "register_agent": {
+          const result = registerAgent();
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+          };
+        }
+        case "list_agents": {
+          const result = listAgents();
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+          };
+        }
+        case "agent_leave": {
+          const args = agentLeaveSchema.parse(request.params.arguments);
+          agentLeave(args.id);
+          return {
+            content: [{ type: "text", text: `Agent ${args.id} has left.` }]
+          };
+        }
+        case "agent_wait": {
+          const args = agentWaitSchema.parse(request.params.arguments);
+          await agentWait(args.seconds);
+          return {
+            content: [
+              { type: "text", text: `Waited for ${args.seconds} seconds.` }
+            ]
+          };
+        }
+        case "add_message": {
+          const args = addMessageSchema.parse(request.params.arguments);
+          const messageId = addMessage(args.senderId, args.content);
+          return {
+            content: [
+              { type: "text", text: `Message ${messageId} added successfully.` }
+            ]
+          };
+        }
+        case "recent_messages": {
+          const result = recentMessages();
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+          };
+        }
+        case "list_messages": {
+          const result = listMessages();
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+          };
+        }
+        case "clear_messages": {
+          clearMessages();
+          return {
+            content: [
+              { type: "text", text: `Message queue successfully cleared.` }
+            ]
+          };
+        }
+        case "add_task": {
+          const args = addTaskSchema.parse(request.params.arguments);
+          const { id } = addTask(args.description);
+          return {
+            content: [{ type: "text", text: `Task ${id} added successfully.` }]
+          };
+        }
+        case "assign_task": {
+          const args = assignTaskSchema.parse(request.params.arguments);
+          assignTask({ ...args });
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Task ${args.taskId} assigned successfully to Agent ${args.agentId}.`
+              }
+            ]
+          };
+        }
+        case "list_tasks": {
+          const allTasks = listTasks();
+          return {
+            content: [{ type: "text", text: JSON.stringify(allTasks, null, 2) }]
+          };
+        }
+        case "complete_task": {
+          const args = completeTaskSchema.parse(request.params.arguments);
+          const taskId = args.taskId;
+          completeTask(taskId);
+          return {
+            content: [
+              { type: "text", text: `Task ${taskId} completed successfully.` }
+            ]
+          };
+        }
+        default:
+          throw new Error(`Unknown tool: ${request.params.name}`);
       }
-    ]
-  };
-});
-mcpServer.setRequestHandler(CallToolRequestSchema, async (request) => {
-  try {
-    switch (request.params.name) {
-      case "register_agent": {
-        const result = registerAgent();
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
-      }
-      case "list_agents": {
-        const result = listAgents();
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
-      }
-      case "agent_leave": {
-        const args = agentLeaveSchema.parse(request.params.arguments);
-        agentLeave(args.id);
-        return {
-          content: [{ type: "text", text: `Agent ${args.id} has left.` }]
-        };
-      }
-      case "agent_wait": {
-        const args = agentWaitSchema.parse(request.params.arguments);
-        await agentWait(args.seconds);
-        return {
-          content: [
-            { type: "text", text: `Waited for ${args.seconds} seconds.` }
-          ]
-        };
-      }
-      case "add_message": {
-        const args = addMessageSchema.parse(request.params.arguments);
-        const messageId = addMessage(args.senderId, args.content);
-        return {
-          content: [
-            { type: "text", text: `Message ${messageId} added successfully.` }
-          ]
-        };
-      }
-      case "recent_messages": {
-        const result = recentMessages();
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
-      }
-      case "list_messages": {
-        const result = listMessages();
-        return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
-      }
-      case "clear_messages": {
-        clearMessages();
-        return {
-          content: [
-            { type: "text", text: `Message queue successfully cleared.` }
-          ]
-        };
-      }
-      case "add_task": {
-        const args = addTaskSchema.parse(request.params.arguments);
-        const { id } = addTask(args.description);
-        return {
-          content: [{ type: "text", text: `Task ${id} added successfully.` }]
-        };
-      }
-      case "assign_task": {
-        const args = assignTaskSchema.parse(request.params.arguments);
-        assignTask({ ...args });
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Task ${args.taskId} assigned successfully to Agent ${args.agentId}.`
-            }
-          ]
-        };
-      }
-      case "list_tasks": {
-        const allTasks = listTasks();
-        return {
-          content: [{ type: "text", text: JSON.stringify(allTasks, null, 2) }]
-        };
-      }
-      case "complete_task": {
-        const args = completeTaskSchema.parse(request.params.arguments);
-        const taskId = args.taskId;
-        completeTask(taskId);
-        return {
-          content: [
-            { type: "text", text: `Task ${taskId} completed successfully.` }
-          ]
-        };
-      }
-      default:
-        throw new Error(`Unknown tool: ${request.params.name}`);
+    } catch (error) {
+      throw new Error(
+        `Error processing request: ${error instanceof Error ? error.message : "unknown error"}`
+      );
     }
-  } catch (error) {
-    throw new Error(
-      `Error processing request: ${error instanceof Error ? error.message : "unknown error"}`
-    );
-  }
-});
+  });
+  return { server: server2 };
+};
+
+// src/stdio.ts
+var { server } = createServer();
 async function runServer() {
   const transport = new StdioServerTransport();
-  await mcpServer.connect(transport);
+  await server.connect(transport);
   console.error("GooseTeam MCP Server running on stdio");
 }
 runServer().catch((error) => {
