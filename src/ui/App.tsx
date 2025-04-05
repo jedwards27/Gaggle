@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MessageList } from './components/MessageList';
 import { TaskList } from './components/TaskList';
 import { Controls } from './components/Controls';
@@ -34,6 +34,9 @@ export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [activeView, setActiveView] = useState<'messages' | 'tasks'>('messages');
+  const pollTimeoutRef = useRef<NodeJS.Timeout>();
+  const pollIntervalRef = useRef<number>(200); // Start with 200ms
+  const lastMessageTimeRef = useRef<Date>(new Date());
 
   const addMessage = (newMessage: Message) => {
     setMessages(prev => {
@@ -103,6 +106,15 @@ export const App: React.FC = () => {
             color: msg.color,
             display_name: msg.display_name
           }));
+          
+          // Update last message time if we have messages
+          if (formattedMessages.length > 0) {
+            const newestMessage = formattedMessages.reduce((latest, current) => 
+              current.timestamp > latest.timestamp ? current : latest
+            );
+            lastMessageTimeRef.current = newestMessage.timestamp;
+          }
+
           setMessages(formattedMessages.sort((a, b) => 
             b.timestamp.getTime() - a.timestamp.getTime()
           ));
@@ -112,6 +124,54 @@ export const App: React.FC = () => {
       console.error('Error fetching messages:', error);
     }
   };
+
+  // Setup polling with dynamic interval based on activity
+  const startPolling = () => {
+    const poll = async () => {
+      await fetchMessages();
+      
+      // Clear any existing timeout
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+      }
+
+      // Calculate time since last message
+      const timeSinceLastMessage = Date.now() - lastMessageTimeRef.current.getTime();
+      const twoMinutes = 2 * 60 * 1000;
+      const oneMinute = 60 * 1000;
+
+      // If we've had activity in the last 2 minutes, use faster polling
+      if (timeSinceLastMessage < twoMinutes) {
+        // Start with 200ms and gradually increase up to 5 seconds
+        pollIntervalRef.current = Math.min(pollIntervalRef.current * 1.5, 5000);
+      } else {
+        // No recent activity, poll every minute
+        pollIntervalRef.current = oneMinute;
+      }
+
+      // Set up next poll
+      pollTimeoutRef.current = setTimeout(poll, pollIntervalRef.current);
+    };
+
+    // Start polling
+    poll();
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollTimeoutRef.current) {
+        clearTimeout(pollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Start polling when connected
+  useEffect(() => {
+    if (isConnected) {
+      startPolling();
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     const initializeConnection = async () => {
