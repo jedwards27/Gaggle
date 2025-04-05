@@ -1,5 +1,5 @@
-import { Task } from "../common/types.ts";
-import { createId } from "../common/utils.ts";
+import type { Task } from "../common/types";
+import { createId } from "../common/utils";
 
 class TaskStore {
   /**

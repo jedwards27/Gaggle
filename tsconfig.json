@@ -1,16 +1,48 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "Node16",
-    "moduleResolution": "Node16",
-    "allowImportingTsExtensions": true,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable",
+    ],
+
+    // Parse files as modules
+    "moduleDetection": "force",
+    "experimentalDecorators": true,
+ 
+    // Compiled with Vite, etc instead of tsc
+    // Also sets `moduleResolution: Bundler`
+    "module": "Preserve",
+    "customConditions": [
+      "development",
+    ],
+ 
+    "baseUrl": "${configDir}",
     "resolveJsonModule": true,
-    "outDir": "./dist",
+     
+    // Allow importing .js files
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+ 
+    // For ESM↔CJS interop. Also enables allowSyntheticDefaultImports
+    "esModuleInterop": true,
+ 
+    // Require explicit `type` import/exports. Also enables isolatedModules
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+
+    // "allowImportingTsExtensions": true,
+    // "forceConsistentCasingInFileNames": true,
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "**/dist",
+    // Gets temporarily created by Vite and causes a race condition if deleted during type-checking
+    "**/vite.config.ts.timestamp-*.mjs",
+    "**/vitest.config.ts.timestamp-*.mjs"
+  ]
 }

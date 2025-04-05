@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import MessageStore from "../MessageStore.ts";
+import MessageStore from "../MessageStore";
 
 /**
  * Test MessageStore

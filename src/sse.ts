@@ -1,5 +1,5 @@
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-import { createServer } from "./goose-team.ts";
+import { createServer } from "./goose-team";
 import express from "express";
 
 // Create the SSE server

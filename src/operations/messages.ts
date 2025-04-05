@@ -1,5 +1,5 @@
-import MessageStore from "../stores/MessageStore.ts";
-import { Message } from "../common/types.js";
+import MessageStore from "../stores/MessageStore";
+import type { Message } from "../common/types";
 
 /**
  * Add a message

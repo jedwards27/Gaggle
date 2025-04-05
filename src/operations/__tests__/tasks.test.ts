@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { addTask, listTasks, assignTask, completeTask } from "../tasks.ts";
-import TaskStore from "../../stores/TaskStore.ts";
-import AgentStore from "../../stores/AgentStore.ts";
+import { addTask, listTasks, assignTask, completeTask } from "../tasks";
+import TaskStore from "../../stores/TaskStore";
+import AgentStore from "../../stores/AgentStore";
 
 /**
  * Test addTask

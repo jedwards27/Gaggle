@@ -1,6 +1,6 @@
-import TaskStore from "../stores/TaskStore.ts";
-import AgentStore from "../stores/AgentStore.ts";
-import { Task } from "../common/types.js";
+import TaskStore from "../stores/TaskStore";
+import AgentStore from "../stores/AgentStore";
+import type { Task } from "../common/types";
 
 interface AssignTaskParams {
   taskId: string;

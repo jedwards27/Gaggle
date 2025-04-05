@@ -1,5 +1,5 @@
-import AgentStore from "../stores/AgentStore.ts";
-import { Agent } from "../common/types.js";
+import AgentStore from "../stores/AgentStore";
+import type { Agent } from "../common/types";
 
 interface RegisterAgentResponse {
   agentId: string;

@@ -1,5 +1,5 @@
-import { Agent } from "../common/types.ts";
-import { createId } from "../common/utils.ts";
+import type { Agent } from "../common/types";
+import { createId } from "../common/utils";
 
 class AgentStore {
   /**

@@ -1,5 +1,5 @@
-import { Message } from "../common/types.ts";
-import { createId } from "../common/utils.ts";
+import type { Message } from "../common/types";
+import { createId } from "../common/utils";
 
 class MessageStore {
   /**
@@ -12,8 +12,10 @@ class MessageStore {
     const message: Message = {
       id: createId("msg"),
       senderId,
+      sender: senderId,
       content,
       timestamp: new Date(),
+      type: 'text'
     };
     MessageStore.messages.push(message);
 

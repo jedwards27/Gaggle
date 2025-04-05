@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import AgentStore from "../AgentStore.ts";
+import AgentStore from "../AgentStore";
 
 /**
  * Test AgentStore

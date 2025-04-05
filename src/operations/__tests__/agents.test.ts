@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "@jest/globals";
-import { listAgents, agentWait, registerAgent, agentLeave } from "../agents.ts";
-import AgentStore from "../../stores/AgentStore.ts";
+import { listAgents, agentWait, registerAgent, agentLeave } from "../agents";
+import AgentStore from "../../stores/AgentStore";
 
 /**
  * Test registerAgent

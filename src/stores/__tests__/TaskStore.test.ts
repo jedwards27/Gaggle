@@ -1,5 +1,6 @@
-import TaskStore from "../TaskStore.ts";
-import { Task } from "../../common/types.ts";
+import { describe, it, expect, beforeEach } from "@jest/globals";
+import TaskStore from "../TaskStore";
+import type { Task } from "../../common/types";
 
 /**
  * Test TaskStore

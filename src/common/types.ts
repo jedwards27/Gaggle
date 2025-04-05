@@ -15,6 +15,9 @@ export interface Agent {
 export interface Message {
   id: string;
   senderId: string;
+  sender?: string;
+  display_name?: string;
   timestamp: Date;
   content: string;
+  type?: string;
 }

@@ -13,27 +13,27 @@ import {
   assignTaskSchema,
   addMessageSchema,
   completeTaskSchema,
-} from "./common/schemas.ts";
+} from "./common/schemas";
 
-import { VERSION } from "./common/version.ts";
+import { VERSION } from "./common/version";
 import {
   registerAgent,
   listAgents,
   agentWait,
   agentLeave,
-} from "./operations/agents.ts";
+} from "./operations/agents";
 import {
   recentMessages,
   addMessage,
   listMessages,
   clearMessages,
-} from "./operations/messages.ts";
+} from "./operations/messages";
 import {
   addTask,
   listTasks,
   assignTask,
   completeTask,
-} from "./operations/tasks.ts";
+} from "./operations/tasks";
 
 export const createServer = () => {
 
@@ -45,7 +45,12 @@ export const createServer = () => {
     },
     {
       capabilities: {
+        resources: {},
+        prompts: {},
         tools: {},
+        logging: {
+          level: "info",
+        },
       },
     },
   );
@@ -120,15 +125,36 @@ export const createServer = () => {
 
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
+      const startTime = Date.now();
+      let result;
+      
       switch (request.params.name) {
         case "register_agent": {
-          const result = registerAgent();
+          result = registerAgent();
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: request.params.arguments,
+              result,
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
           };
         }
         case "list_agents": {
-          const result = listAgents();
+          result = listAgents();
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: request.params.arguments,
+              result,
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
           };
@@ -136,6 +162,14 @@ export const createServer = () => {
         case "agent_leave": {
           const args = agentLeaveSchema.parse(request.params.arguments);
           agentLeave(args.id);
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+            }
+          });
           return {
             content: [{ type: "text", text: `Agent ${args.id} has left.` }],
           };
@@ -143,6 +177,14 @@ export const createServer = () => {
         case "agent_wait": {
           const args = agentWaitSchema.parse(request.params.arguments);
           await agentWait(args.seconds);
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+            }
+          });
           return {
             content: [
               { type: "text", text: `Waited for ${args.seconds} seconds.` },
@@ -152,6 +194,33 @@ export const createServer = () => {
         case "add_message": {
           const args = addMessageSchema.parse(request.params.arguments);
           const messageId = addMessage(args.senderId, args.content);
+          
+          // Send both a tool call notification and a message add notification
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+              result: { messageId },
+            }
+          });
+          
+          // Send the message-specific notification that the client is listening for
+          server.notification({
+            method: "notifications/message/add",
+            params: {
+              message: {
+                senderId: args.senderId,
+                sender: args.senderId,
+                content: args.content,
+                timestamp: new Date(startTime).toISOString(),
+                type: "text",
+                display_name: args.display_name
+              }
+            }
+          });
+          
           return {
             content: [
               { type: "text", text: `Message ${messageId} added successfully.` },
@@ -159,19 +228,42 @@ export const createServer = () => {
           };
         }
         case "recent_messages": {
-          const result = recentMessages();
+          result = recentMessages();
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result,
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
           };
         }
         case "list_messages": {
-          const result = listMessages();
+          result = listMessages();
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result,
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
           };
         }
         case "clear_messages": {
           clearMessages();
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+            }
+          });
           return {
             content: [
               { type: "text", text: `Message queue successfully cleared.` },
@@ -181,6 +273,15 @@ export const createServer = () => {
         case "add_task": {
           const args = addTaskSchema.parse(request.params.arguments);
           const { id } = addTask(args.description);
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+              result: { id },
+            }
+          });
           return {
             content: [{ type: "text", text: `Task ${id} added successfully.` }],
           };
@@ -188,6 +289,14 @@ export const createServer = () => {
         case "assign_task": {
           const args = assignTaskSchema.parse(request.params.arguments);
           assignTask({ ...args });
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+            }
+          });
           return {
             content: [
               {
@@ -199,6 +308,14 @@ export const createServer = () => {
         }
         case "list_tasks": {
           const allTasks = listTasks();
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result: allTasks,
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(allTasks, null, 2) }],
           };
@@ -207,6 +324,14 @@ export const createServer = () => {
           const args = completeTaskSchema.parse(request.params.arguments);
           const taskId = args.taskId;
           completeTask(taskId);
+          server.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+            }
+          });
           return {
             content: [
               { type: "text", text: `Task ${taskId} completed successfully.` },
@@ -217,11 +342,17 @@ export const createServer = () => {
           throw new Error(`Unknown tool: ${request.params.name}`);
       }
     } catch (error) {
-      throw new Error(
-        `Error processing request: ${
-          error instanceof Error ? error.message : "unknown error"
-        }`,
-      );
+      const errorMessage = error instanceof Error ? error.message : "unknown error";
+      server.notification({
+        method: "notifications/tool/call",
+        params: {
+          tool: request.params.name,
+          timestamp: Date.now(),
+          arguments: request.params.arguments,
+          error: errorMessage,
+        }
+      });
+      throw new Error(`Error processing request: ${errorMessage}`);
     }
   });
 

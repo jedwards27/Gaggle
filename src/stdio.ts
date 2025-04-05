@@ -1,5 +1,5 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createServer } from "./goose-team.ts";
+import { createServer } from "./goose-team";
 
 // Create the STDIO server
 const { server } = createServer();
@@ -7,7 +7,6 @@ const { server } = createServer();
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("GooseTeam MCP Server running on stdio");
 }
 
 runServer().catch((error) => {

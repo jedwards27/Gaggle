@@ -5,8 +5,8 @@ import {
   listMessages,
   countMessages,
   clearMessages,
-} from "../messages.ts";
-import MessageStore from "../../stores/MessageStore.ts";
+} from "../messages";
+import MessageStore from "../../stores/MessageStore";
 
 /**
  * Test addMessage
