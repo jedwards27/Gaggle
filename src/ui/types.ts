@@ -6,13 +6,7 @@ export interface Message {
   color?: string;
   display_name?: string;
 }
-
-export interface ControlsProps {
-  isConnected: boolean;
-  onClear: () => void;
-  onSendMessage: (message: string) => void;
-}
-
 export interface MessageListProps {
   messages: Message[];
+  handleSubmit: (message: string) => void;
 } 

@@ -6617,7 +6617,11 @@ var Server = class extends Protocol {
 var noArgSchema = z.object({});
 var addMessageSchema = z.object({
   senderId: z.string().nonempty("Sender ID is required"),
-  content: z.string().nonempty("Content is required")
+  content: z.string().nonempty("Content is required"),
+  display_name: z.string().optional()
+});
+var addProjectSchema = z.object({
+  name: z.string().nonempty("Name is required")
 });
 var agentWaitSchema = z.object({ seconds: z.number().min(0) });
 var agentLeaveSchema = z.object({
@@ -6650,7 +6654,8 @@ var AgentStore = class _AgentStore {
   static registerAgent() {
     const agentId = createId("agent");
     const color = this.agents.length === 0 ? "black" : _AgentStore.getRandomColor();
-    const newAgent = { id: agentId, color, role: "", tasks: [] };
+    const role = this.agents.length === 0 ? "Project Coordinator" : "Team Member";
+    const newAgent = { id: agentId, color, role, tasks: [] };
     this.agents.push(newAgent);
     return newAgent;
   }
@@ -6684,6 +6689,15 @@ var AgentStore = class _AgentStore {
       _AgentStore.agents = _AgentStore.agents.filter((agent2) => agent2.id !== id);
     }
     return agent;
+  }
+  /**
+   * Set the role of a specific agent.
+   */
+  static setRole(agentId, newRole) {
+    const agent = _AgentStore.getAgent(agentId);
+    if (agent) {
+      agent.role = newRole;
+    }
   }
   /**
    * Get a count of all agents
@@ -6731,8 +6745,10 @@ var MessageStore = class _MessageStore {
     const message = {
       id: createId("msg"),
       senderId,
+      sender: senderId,
       content,
-      timestamp: /* @__PURE__ */ new Date()
+      timestamp: /* @__PURE__ */ new Date(),
+      type: "text"
     };
     _MessageStore.messages.push(message);
     if (_MessageStore.messages.length > _MessageStore.messageLimit) {
@@ -6787,6 +6803,103 @@ function listMessages() {
 }
 function clearMessages() {
   MessageStore_default.clearMessages();
+}
+
+// node_modules/uuid/dist/esm-node/stringify.js
+var byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+  byteToHex.push((i + 256).toString(16).slice(1));
+}
+function unsafeStringify(arr, offset = 0) {
+  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+}
+
+// node_modules/uuid/dist/esm-node/rng.js
+var import_node_crypto = __toESM(require("node:crypto"));
+var rnds8Pool = new Uint8Array(256);
+var poolPtr = rnds8Pool.length;
+function rng() {
+  if (poolPtr > rnds8Pool.length - 16) {
+    import_node_crypto.default.randomFillSync(rnds8Pool);
+    poolPtr = 0;
+  }
+  return rnds8Pool.slice(poolPtr, poolPtr += 16);
+}
+
+// node_modules/uuid/dist/esm-node/native.js
+var import_node_crypto2 = __toESM(require("node:crypto"));
+var native_default = {
+  randomUUID: import_node_crypto2.default.randomUUID
+};
+
+// node_modules/uuid/dist/esm-node/v4.js
+function v4(options, buf, offset) {
+  if (native_default.randomUUID && !buf && !options) {
+    return native_default.randomUUID();
+  }
+  options = options || {};
+  const rnds = options.random || (options.rng || rng)();
+  rnds[6] = rnds[6] & 15 | 64;
+  rnds[8] = rnds[8] & 63 | 128;
+  if (buf) {
+    offset = offset || 0;
+    for (let i = 0; i < 16; ++i) {
+      buf[offset + i] = rnds[i];
+    }
+    return buf;
+  }
+  return unsafeStringify(rnds);
+}
+var v4_default = v4;
+
+// src/stores/ProjectStore.ts
+var ProjectStore = class _ProjectStore {
+  static projects = [];
+  static addProject(name, description) {
+    const newProject = {
+      id: v4_default(),
+      name,
+      description: description || "",
+      createdAt: Date.now()
+    };
+    _ProjectStore.projects.push(newProject);
+    return newProject;
+  }
+  static listProjects() {
+    return _ProjectStore.projects;
+  }
+  static getProject(id) {
+    return _ProjectStore.projects.find((p) => p.id === id);
+  }
+  static updateProject(id, updates) {
+    _ProjectStore.projects = _ProjectStore.projects.map((p) => {
+      if (p.id === id) {
+        return { ...p, ...updates };
+      }
+      return p;
+    });
+  }
+  static deleteProject(id) {
+    _ProjectStore.projects = _ProjectStore.projects.filter((p) => p.id !== id);
+  }
+  static clearProjects() {
+    _ProjectStore.projects = [];
+  }
+  static countProjects() {
+    return _ProjectStore.projects.length;
+  }
+};
+var ProjectStore_default = ProjectStore;
+
+// src/operations/projects.ts
+function listProjects() {
+  return ProjectStore_default.listProjects();
+}
+function addProject(name, description = "") {
+  return ProjectStore_default.addProject(name, description);
+}
+function clearProjects() {
+  ProjectStore_default.clearProjects();
 }
 
 // src/stores/TaskStore.ts
@@ -6898,7 +7011,12 @@ var createServer = () => {
     },
     {
       capabilities: {
-        tools: {}
+        resources: {},
+        prompts: {},
+        tools: {},
+        logging: {
+          level: "notice"
+        }
       }
     }
   );
@@ -6946,6 +7064,21 @@ var createServer = () => {
           inputSchema: zodToJsonSchema(noArgSchema)
         },
         {
+          name: "add_project",
+          description: "Add a new project",
+          inputSchema: zodToJsonSchema(addProjectSchema)
+        },
+        {
+          name: "list_projects",
+          description: "Retrieve all projects",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
+          name: "clear_projects",
+          description: "Clear all projects",
+          inputSchema: zodToJsonSchema(noArgSchema)
+        },
+        {
           name: "add_task",
           description: "Add a new task",
           inputSchema: zodToJsonSchema(addTaskSchema)
@@ -6970,15 +7103,35 @@ var createServer = () => {
   });
   server2.setRequestHandler(CallToolRequestSchema, async (request) => {
     try {
+      const startTime = Date.now();
+      let result;
       switch (request.params.name) {
         case "register_agent": {
-          const result = registerAgent();
+          result = registerAgent();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: request.params.arguments,
+              result
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
           };
         }
         case "list_agents": {
-          const result = listAgents();
+          result = listAgents();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: request.params.arguments,
+              result
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
           };
@@ -6986,6 +7139,14 @@ var createServer = () => {
         case "agent_leave": {
           const args = agentLeaveSchema.parse(request.params.arguments);
           agentLeave(args.id);
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args
+            }
+          });
           return {
             content: [{ type: "text", text: `Agent ${args.id} has left.` }]
           };
@@ -6993,6 +7154,14 @@ var createServer = () => {
         case "agent_wait": {
           const args = agentWaitSchema.parse(request.params.arguments);
           await agentWait(args.seconds);
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args
+            }
+          });
           return {
             content: [
               { type: "text", text: `Waited for ${args.seconds} seconds.` }
@@ -7002,6 +7171,15 @@ var createServer = () => {
         case "add_message": {
           const args = addMessageSchema.parse(request.params.arguments);
           const messageId = addMessage(args.senderId, args.content);
+          server2.sendLoggingMessage({
+            level: "notice",
+            data: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+              result: { messageId }
+            }
+          });
           return {
             content: [
               { type: "text", text: `Message ${messageId} added successfully.` }
@@ -7009,28 +7187,115 @@ var createServer = () => {
           };
         }
         case "recent_messages": {
-          const result = recentMessages();
+          result = recentMessages();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
           };
         }
         case "list_messages": {
-          const result = listMessages();
+          result = listMessages();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
           };
         }
         case "clear_messages": {
           clearMessages();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime
+            }
+          });
           return {
             content: [
               { type: "text", text: `Message queue successfully cleared.` }
             ]
           };
         }
+        case "add_project": {
+          const args = addProjectSchema.parse(request.params.arguments);
+          const projectId = addProject(args.name);
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+              result: { projectId }
+            }
+          });
+          server2.notification({
+            method: "notifications/project/add",
+            params: {
+              project: {
+                name: args.name,
+                timestamp: new Date(startTime).toISOString()
+              }
+            }
+          });
+          return {
+            content: [
+              { type: "text", text: `Project ${projectId} added successfully.` }
+            ]
+          };
+        }
+        case "list_projects": {
+          result = listProjects();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result
+            }
+          });
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+          };
+        }
+        case "clear_projects": {
+          clearProjects();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result
+            }
+          });
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+          };
+        }
         case "add_task": {
           const args = addTaskSchema.parse(request.params.arguments);
           const { id } = addTask(args.description);
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args,
+              result: { id }
+            }
+          });
           return {
             content: [{ type: "text", text: `Task ${id} added successfully.` }]
           };
@@ -7038,6 +7303,14 @@ var createServer = () => {
         case "assign_task": {
           const args = assignTaskSchema.parse(request.params.arguments);
           assignTask({ ...args });
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args
+            }
+          });
           return {
             content: [
               {
@@ -7049,6 +7322,14 @@ var createServer = () => {
         }
         case "list_tasks": {
           const allTasks = listTasks();
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              result: allTasks
+            }
+          });
           return {
             content: [{ type: "text", text: JSON.stringify(allTasks, null, 2) }]
           };
@@ -7057,6 +7338,14 @@ var createServer = () => {
           const args = completeTaskSchema.parse(request.params.arguments);
           const taskId = args.taskId;
           completeTask(taskId);
+          server2.notification({
+            method: "notifications/tool/call",
+            params: {
+              tool: request.params.name,
+              timestamp: startTime,
+              arguments: args
+            }
+          });
           return {
             content: [
               { type: "text", text: `Task ${taskId} completed successfully.` }
@@ -7067,9 +7356,17 @@ var createServer = () => {
           throw new Error(`Unknown tool: ${request.params.name}`);
       }
     } catch (error) {
-      throw new Error(
-        `Error processing request: ${error instanceof Error ? error.message : "unknown error"}`
-      );
+      const errorMessage = error instanceof Error ? error.message : "unknown error";
+      server2.notification({
+        method: "notifications/tool/call",
+        params: {
+          tool: request.params.name,
+          timestamp: Date.now(),
+          arguments: request.params.arguments,
+          error: errorMessage
+        }
+      });
+      throw new Error(`Error processing request: ${errorMessage}`);
     }
   });
   return { server: server2 };
@@ -7080,7 +7377,6 @@ var { server } = createServer();
 async function runServer() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("GooseTeam MCP Server running on stdio");
 }
 runServer().catch((error) => {
   console.error("Fatal error in main():", error);

@@ -8,6 +8,14 @@ const transport = new SSEClientTransport(new URL("http://localhost:3001/sse"));
 export const client = new Client({
   name: "Gaggle",
   version: "0.0.1",
+  capabilities: {
+    resources: {},
+    prompts: {},
+    tools: {},
+    logging: {
+      level: "notice",
+    },
+  },
 });
 
 // Connect to the MCP server

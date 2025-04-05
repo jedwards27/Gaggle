@@ -82,12 +82,33 @@ const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
   );
 };
 
-export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+export const MessageList: React.FC<MessageListProps> = ({ messages, handleSubmit }) => {
+  const [newMessage, setNewMessage] = useState('');
+
+  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (newMessage.trim()) {
+      handleSubmit(newMessage.trim());
+      setNewMessage('');
+    }
+  };
+
   return (
-    <div id="messages">
-      {messages.map((message, index) => (
-        <MessageItem key={index} message={message} />
-      ))}
-    </div>
+    <>
+      <form className="message-input" onSubmit={onSubmit}>
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type your message..."
+        />
+        <button type="submit">Send</button>
+      </form>
+      <div id="messages">
+        {messages.map((message, index) => (
+          <MessageItem key={index} message={message} />
+        ))}
+      </div>
+    </>
   );
 }; 

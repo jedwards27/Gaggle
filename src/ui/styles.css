@@ -35,6 +35,15 @@ body {
   }
 }
 
+.main-content-body {
+  height: 100%;
+  padding: 20px;
+}
+
+#messages {
+  margin-top: 36px;
+}
+
 .timestamp {
   color: #6c757d;
   font-size: 0.85em;
@@ -120,7 +129,7 @@ body {
   background: rgba(248, 249, 250, 0.95);
   backdrop-filter: blur(10px);
   padding: 15px 0;
-  margin: -20px -20px 20px -20px;
+  margin: 0 0 20px 0;
   padding: 20px;
   z-index: 100;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -316,11 +325,18 @@ input[type="text"]:focus {
   color: #333;
 }
 
+.sidebar ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
 }
+
 
 .sidebar button {
   padding: 12px 16px;
@@ -348,16 +364,51 @@ input[type="text"]:focus {
   border-color: #007bff;
 }
 
+.sidebar li button {
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.main-tabs {
+  display: flex;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  max-width: 90%;
+  width: 500px;
+}
+
 .main-content {
   flex: 1;
-  padding: 20px;
   overflow-y: auto;
+  position: relative;
 }
 
 .task-board {
   display: flex;
   gap: 20px;
-  padding: 20px;
   height: 100%;
   overflow-x: auto;
 }

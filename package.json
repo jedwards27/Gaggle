@@ -31,6 +31,7 @@
     "@types/node-fetch": "^2.6.12",
     "@types/react": "^18.2.67",
     "@types/react-dom": "^18.2.22",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
     "@vitejs/plugin-react-swc": "^3.8.0",
@@ -45,11 +46,13 @@
     "vitest": "^3.0.9"
   },
   "dependencies": {
+    "@modelcontextprotocol/inspector": "^0.6.0",
     "@modelcontextprotocol/sdk": "^1.8.0",
     "@types/express": "^5.0.0",
     "mcp-proxy": "^2.4.0",
     "node-fetch": "^2.7.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "uuid": "^10.0.0"
   }
 }

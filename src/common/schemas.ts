@@ -8,6 +8,10 @@ export const addMessageSchema = z.object({
   display_name: z.string().optional()
 });
 
+export const addProjectSchema = z.object({
+  name: z.string().nonempty("Name is required"),
+});
+
 export const agentWaitSchema = z.object({ seconds: z.number().min(0) });
 
 export const agentLeaveSchema = z.object({

@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { MessageList } from './components/MessageList';
 import { TaskList } from './components/TaskList';
-import { Controls } from './components/Controls';
 import { AgentList } from './components/AgentList';
+import ProjectSelector from './components/ProjectSelector';
 import type { Message } from './types';
 import { client, connectToServer } from '../client';
-import { NotificationSchema } from '@modelcontextprotocol/sdk/types.js';
-import type { Notification } from '@modelcontextprotocol/sdk/types.js';
-import { z } from 'zod';
+import { LoggingMessageNotificationSchema, type Notification } from '@modelcontextprotocol/sdk/types.js';
+import type { Project } from 'src/common/types';
 
 interface ToolResponse {
   content: Array<{
@@ -16,23 +15,9 @@ interface ToolResponse {
   }>;
 }
 
-// Define the schema for message notifications
-const MessageAddNotificationSchema = NotificationSchema.extend({
-  method: z.literal('notifications/message/add'),
-  params: z.object({
-    message: z.object({
-      senderId: z.string(),
-      content: z.string(),
-      timestamp: z.string().optional(),
-      type: z.string().optional(),
-      color: z.string().optional(),
-      display_name: z.string().optional()
-    })
-  })
-});
-
 export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [activeView, setActiveView] = useState<'messages' | 'tasks' | 'agents'>('messages');
   const pollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -52,7 +37,7 @@ export const App: React.FC = () => {
   const sendMessage = async (message: string) => {
     if (message && isConnected) {
       try {
-        const response = await client.callTool({
+        await client.callTool({
           name: 'add_message',
           arguments: {
             senderId: 'Human',
@@ -75,18 +60,18 @@ export const App: React.FC = () => {
     }
   };
 
-  const clearMessages = async () => {
-    if (isConnected) {
-      try {
-        await client.callTool({
-          name: 'clear_messages'
-        });
-        setMessages([]);
-      } catch (error) {
-        console.error('Error clearing messages:', error);
-      }
-    }
-  };
+  // const clearMessages = async () => {
+  //   if (isConnected) {
+  //     try {
+  //       await client.callTool({
+  //         name: 'clear_messages'
+  //       });
+  //       setMessages([]);
+  //     } catch (error) {
+  //       console.error('Error clearing messages:', error);
+  //     }
+  //   }
+  // };
 
   // Function to fetch and update messages
   const fetchMessages = async () => {
@@ -123,6 +108,22 @@ export const App: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+    }
+  };
+
+  // Function to fetch and update messages
+  const fetchProjects = async () => {
+    try {
+      const response = await client.callTool({
+        name: 'list_projects'
+      }) as ToolResponse;
+      
+      if (response?.content?.[0]?.text) {
+        const projects = JSON.parse(response.content[0].text);
+        setProjects(projects);
+      }
+    } catch (error) {
+      console.error('Error fetching projects:', error);
     }
   };
 
@@ -189,21 +190,9 @@ export const App: React.FC = () => {
 
         // Set up specific message handler
         client.setNotificationHandler(
-          MessageAddNotificationSchema,
+          LoggingMessageNotificationSchema,
           (notification) => {
             console.log('Received message notification:', notification);
-            // Extract the message from the notification params
-            const msg = notification.params.message;
-            const newMessage: Message = {
-              timestamp: new Date(msg.timestamp || new Date()),
-              sender: msg.senderId,
-              content: msg.content,
-              type: msg.type || 'text',
-              color: msg.color,
-              display_name: msg.display_name
-            };
-            console.log('Adding message from notification:', newMessage);
-            addMessage(newMessage);
           }
         );
 
@@ -225,7 +214,7 @@ export const App: React.FC = () => {
 
         // Initial fetch of messages
         await fetchMessages();
-
+        await fetchProjects();
       } catch (error) {
         console.error('Failed to initialize MCP connection:', error);
         setIsConnected(false);
@@ -243,7 +232,10 @@ export const App: React.FC = () => {
     <div className="app">
       <div className="sidebar">
         <h1>Gaggle</h1>
-        <nav>
+        <ProjectSelector projects={projects} />
+      </div>
+      <div className="main-content">
+        <div className="main-tabs">
           <button 
             className={activeView === 'messages' ? 'active' : ''}
             onClick={() => setActiveView('messages')}
@@ -262,25 +254,21 @@ export const App: React.FC = () => {
           >
             Agents
           </button>
-        </nav>
-      </div>
-      <div className="main-content">
-        {activeView === 'messages' && (
-          <>
-            <Controls 
-              isConnected={isConnected} 
-              onClear={clearMessages} 
-              onSendMessage={sendMessage} 
-            />
-            <MessageList messages={messages} />
-          </>
-        )}
-        {activeView === 'tasks' && (
-          <TaskList />
-        )}
-        {activeView === 'agents' && (
-          <AgentList />
-        )}
+          <div className={`status ${isConnected ? 'connected' : 'disconnected'}`}>
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </div>
+          </div>
+        <div className="main-content-body">
+          {activeView === 'messages' && (
+            <MessageList messages={messages} handleSubmit={sendMessage} />
+          )}
+          {activeView === 'tasks' && (
+            <TaskList />
+          )}
+          {activeView === 'agents' && (
+            <AgentList />
+          )}
+          </div>
       </div>
     </div>
   );

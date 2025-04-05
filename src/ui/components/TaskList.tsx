@@ -22,7 +22,14 @@ export const TaskList: React.FC = () => {
       if (response?.content?.[0]?.text) {
         const tasks = JSON.parse(response.content[0].text);
         if (Array.isArray(tasks)) {
-          setTasks(tasks);
+          setTasks(tasks.map((original: any) => ({
+          id: original.id,
+          title: original.description,
+          description: original.description,
+          status: original.status === 'completed' ? 'completed' : (original.status === 'open' || original.status === 'in_progress' ? original.status : 'open'),
+          assignedTo: original.agentId || ''
+        })));
+
         }
       }
     } catch (error) {
