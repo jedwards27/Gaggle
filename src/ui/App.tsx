@@ -242,7 +242,7 @@ export const App: React.FC = () => {
   return (
     <div className="app">
       <div className="sidebar">
-        <h1>MCP Viewer</h1>
+        <h1>Gaggle</h1>
         <nav>
           <button 
             className={activeView === 'messages' ? 'active' : ''}
