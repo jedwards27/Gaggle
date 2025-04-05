@@ -9,7 +9,10 @@ class AgentStore {
     const agentId = createId("agent");
     const color: string =
       this.agents.length === 0 ? "black" : AgentStore.getRandomColor();
-    const newAgent: Agent = { id: agentId, color, role: "", tasks: [] };
+    const role = (this.agents.length === 0)
+      ? "Project Coordinator"
+      : "Team Member";
+    const newAgent: Agent = { id: agentId, color, role, tasks: [] };
     this.agents.push(newAgent);
     return newAgent;
   }
@@ -47,6 +50,16 @@ class AgentStore {
       AgentStore.agents = AgentStore.agents.filter((agent) => agent.id !== id);
     }
     return agent;
+  }
+
+  /**
+   * Set the role of a specific agent.
+   */
+  static setRole(agentId: string, newRole: string) {
+    const agent = AgentStore.getAgent(agentId);
+    if (agent) {
+      agent.role = newRole;
+    }
   }
 
   /**

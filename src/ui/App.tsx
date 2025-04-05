@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MessageList } from './components/MessageList';
 import { TaskList } from './components/TaskList';
 import { Controls } from './components/Controls';
+import { AgentList } from './components/AgentList';
 import type { Message } from './types';
 import { client, connectToServer } from '../client';
 import { NotificationSchema } from '@modelcontextprotocol/sdk/types.js';
@@ -17,9 +18,9 @@ interface ToolResponse {
 
 // Define the schema for message notifications
 const MessageAddNotificationSchema = NotificationSchema.extend({
-  method: z.literal('notifications/message/add'),  // Updated to match the correct notification method
+  method: z.literal('notifications/message/add'),
   params: z.object({
-    message: z.object({  // The actual message is nested in the params
+    message: z.object({
       senderId: z.string(),
       content: z.string(),
       timestamp: z.string().optional(),
@@ -33,7 +34,7 @@ const MessageAddNotificationSchema = NotificationSchema.extend({
 export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeView, setActiveView] = useState<'messages' | 'tasks'>('messages');
+  const [activeView, setActiveView] = useState<'messages' | 'tasks' | 'agents'>('messages');
   const pollTimeoutRef = useRef<NodeJS.Timeout>();
   const pollIntervalRef = useRef<number>(200); // Start with 200ms
   const lastMessageTimeRef = useRef<Date>(new Date());
@@ -41,7 +42,7 @@ export const App: React.FC = () => {
   const addMessage = (newMessage: Message) => {
     setMessages(prev => {
       // Add new message and sort by timestamp (newest first)
-      const updated = [...prev, newMessage].sort((a, b) => 
+      const updated = [...prev, newMessage].sort((a, b) =>
         b.timestamp.getTime() - a.timestamp.getTime()
       );
       return updated;
@@ -109,13 +110,13 @@ export const App: React.FC = () => {
           
           // Update last message time if we have messages
           if (formattedMessages.length > 0) {
-            const newestMessage = formattedMessages.reduce((latest, current) => 
+            const newestMessage = formattedMessages.reduce((latest, current) =>
               current.timestamp > latest.timestamp ? current : latest
             );
             lastMessageTimeRef.current = newestMessage.timestamp;
           }
 
-          setMessages(formattedMessages.sort((a, b) => 
+          setMessages(formattedMessages.sort((a, b) =>
             b.timestamp.getTime() - a.timestamp.getTime()
           ));
         }
@@ -255,22 +256,32 @@ export const App: React.FC = () => {
           >
             Tasks
           </button>
+          <button
+            className={activeView === 'agents' ? 'active' : ''}
+            onClick={() => setActiveView('agents')}
+          >
+            Agents
+          </button>
         </nav>
       </div>
       <div className="main-content">
-        {activeView === 'messages' ? (
+        {activeView === 'messages' && (
           <>
             <Controls 
-              isConnected={isConnected}
-              onClear={clearMessages}
-              onSendMessage={sendMessage}
+              isConnected={isConnected} 
+              onClear={clearMessages} 
+              onSendMessage={sendMessage} 
             />
             <MessageList messages={messages} />
           </>
-        ) : (
+        )}
+        {activeView === 'tasks' && (
           <TaskList />
+        )}
+        {activeView === 'agents' && (
+          <AgentList />
         )}
       </div>
     </div>
   );
-}; 
+};
