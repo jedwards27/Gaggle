@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MessageList } from './components/MessageList';
+import { TaskList } from './components/TaskList';
 import { Controls } from './components/Controls';
 import type { Message } from './types';
 import { client, connectToServer } from '../client';
@@ -32,6 +33,7 @@ const MessageAddNotificationSchema = NotificationSchema.extend({
 export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const [activeView, setActiveView] = useState<'messages' | 'tasks'>('messages');
 
   const addMessage = (newMessage: Message) => {
     setMessages(prev => {
@@ -178,13 +180,37 @@ export const App: React.FC = () => {
 
   return (
     <div className="app">
-      <h1>MCP Message Viewer</h1>
-      <Controls 
-        isConnected={isConnected}
-        onClear={clearMessages}
-        onSendMessage={sendMessage}
-      />
-      <MessageList messages={messages} />
+      <div className="sidebar">
+        <h1>MCP Viewer</h1>
+        <nav>
+          <button 
+            className={activeView === 'messages' ? 'active' : ''}
+            onClick={() => setActiveView('messages')}
+          >
+            Messages
+          </button>
+          <button 
+            className={activeView === 'tasks' ? 'active' : ''}
+            onClick={() => setActiveView('tasks')}
+          >
+            Tasks
+          </button>
+        </nav>
+      </div>
+      <div className="main-content">
+        {activeView === 'messages' ? (
+          <>
+            <Controls 
+              isConnected={isConnected}
+              onClear={clearMessages}
+              onSendMessage={sendMessage}
+            />
+            <MessageList messages={messages} />
+          </>
+        ) : (
+          <TaskList />
+        )}
+      </div>
     </div>
   );
 }; 
