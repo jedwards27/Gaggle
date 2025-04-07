@@ -1,12 +1,16 @@
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { createServer } from "./goose-team";
 import express from "express";
+import { exec } from "child_process";
+import bodyParser from "body-parser";
 
 // Create the SSE server
 const { server } = createServer();
 
 // Create the express app
 const app = express();
+
+app.use(bodyParser.json());
 
 const transports: Map<string, SSEServerTransport> = new Map<string, SSEServerTransport>();
 
@@ -40,6 +44,18 @@ app.post("/message", async (req, res) => {
     console.log("Client Message from", sessionId);
     await transport.handlePostMessage(req, res);
   }
+});
+
+// Route to run "npm run agent:text" in the local filesystem
+app.post("/run-agent-text", async (req, res) => {
+  exec("npm run agent:text", (error, stdout, stderr) => {
+    if (error) {
+      console.error("Error running 'npm run agent:text'", stderr);
+      return res.status(500).json({ error: stderr });
+    }
+    console.log("Successfully ran 'npm run agent:text':", stdout);
+    return res.status(200).json({ output: stdout });
+  });
 });
 
 const PORT = process.env.PORT || 3001;

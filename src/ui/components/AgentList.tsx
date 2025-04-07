@@ -2,8 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { client } from '../../client';
 import type { Agent } from '../types';
 
+/**
+ * AgentList component.
+ *
+ * Instead of calling the 'shell' tool, we will call a local API endpoint
+ * that runs 'npm run agent:text' on the local machine.
+ */
 export const AgentList: React.FC = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [shellOutput, setShellOutput] = useState<string>('');
+
+  // We'll still use the GooseTeam client to list agents, but for the command
+  // we'll call our custom /run-agent-text route.
 
   const fetchAgents = async () => {
     try {
@@ -20,6 +30,27 @@ export const AgentList: React.FC = () => {
     }
   };
 
+  /**
+   * Instead of a tool call, call a local endpoint to run 'npm run agent:text' via Node.js.
+   */
+  const runAgentTextLocally = async () => {
+    try {
+      const response = await fetch('/run-agent-text', {
+        method: 'POST'
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        setShellOutput(`Error: ${errorData.error}`);
+      } else {
+        const data = await response.json();
+        setShellOutput(data.output);
+      }
+    } catch (err) {
+      console.error('Error calling /run-agent-text:', err);
+      setShellOutput(`Request failed: ${err}`);
+    }
+  };
+
   useEffect(() => {
     fetchAgents();
   }, []);
@@ -27,6 +58,30 @@ export const AgentList: React.FC = () => {
   return (
     <div className="agent-list">
       <h2>Active Agents</h2>
+
+      <div style={{ background: '#e8f4fa', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', border: '1px solid #ccc' }}>
+        <h3>Launch a New Agent (Locally)</h3>
+        <p>Click the button below to run <code>npm run agent:text</code> on the local filesystem via our server route.</p>
+        <button
+          style={{
+            backgroundColor: '#0366ee',
+            color: '#fff',
+            padding: '0.5rem 1rem',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+          onClick={runAgentTextLocally}
+        >
+          Launch 'npm run agent:text'
+        </button>
+        {shellOutput && (
+          <pre style={{ marginTop: '1rem', background: '#f6f8fa', padding: '1rem', borderRadius: '4px', border: '1px solid #ccc' }}>
+            {shellOutput}
+          </pre>
+        )}
+      </div>
+
       {agents.length === 0 ? (
         <p>No agents connected.</p>
       ) : (

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MessageList } from './components/MessageList';
 import { TaskList } from './components/TaskList';
 import { AgentList } from './components/AgentList';
+import { TrainingCenter } from './components/TrainingCenter';
 import ProjectSelector from './components/ProjectSelector';
 import type { Message } from './types';
 import { client, connectToServer } from '../client';
@@ -19,7 +20,7 @@ export const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeView, setActiveView] = useState<'messages' | 'tasks' | 'agents'>('messages');
+  const [activeView, setActiveView] = useState<'messages' | 'tasks' | 'agents' | 'training'>('messages');
   const pollTimeoutRef = useRef<NodeJS.Timeout>();
   const pollIntervalRef = useRef<number>(200); // Start with 200ms
   const lastMessageTimeRef = useRef<Date>(new Date());
@@ -254,6 +255,12 @@ export const App: React.FC = () => {
           >
             Agents
           </button>
+          <button
+            className={activeView === 'training' ? 'active' : ''}
+            onClick={() => setActiveView('training')}
+          >
+            Training
+          </button>
           <div className={`status ${isConnected ? 'connected' : 'disconnected'}`}>
             {isConnected ? 'Connected' : 'Disconnected'}
           </div>
@@ -267,6 +274,9 @@ export const App: React.FC = () => {
           )}
           {activeView === 'agents' && (
             <AgentList />
+          )}
+          {activeView === 'training' && (
+            <TrainingCenter />
           )}
           </div>
       </div>
