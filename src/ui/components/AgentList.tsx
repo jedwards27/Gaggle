@@ -31,7 +31,7 @@ export const AgentList: React.FC = () => {
   };
 
   /**
-   * Instead of a tool call, call a local endpoint to run 'npm run agent:text' via Node.js.
+   * Call a local endpoint to run 'npm run agent:text' via Node.js.
    */
   const runAgentTextLocally = async () => {
     try {
@@ -60,7 +60,7 @@ export const AgentList: React.FC = () => {
       <h2>Active Agents</h2>
 
       <div style={{ background: '#e8f4fa', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', border: '1px solid #ccc' }}>
-        <h3>Launch a New Agent (Locally)</h3>
+        <h3>Launch a New Agent</h3>
         <p>Click the button below to run <code>npm run agent:text</code> on the local filesystem via our server route.</p>
         <button
           style={{
@@ -73,7 +73,7 @@ export const AgentList: React.FC = () => {
           }}
           onClick={runAgentTextLocally}
         >
-          Launch 'npm run agent:text'
+          Launch Agent
         </button>
         {shellOutput && (
           <pre style={{ marginTop: '1rem', background: '#f6f8fa', padding: '1rem', borderRadius: '4px', border: '1px solid #ccc' }}>
